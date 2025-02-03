@@ -1,0 +1,44 @@
+/* Make the canvas take up the full screen */
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    border: 2px solid white;
+    background-color: black;
+}
+
+/* UI Elements */
+#ui {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Restart Button */
+#restartButton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    padding: 10px 20px;
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none;
+}
+
+#restartButton:hover {
+    background-color: darkred;
+}
