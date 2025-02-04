@@ -96,7 +96,6 @@ export function gameLoop() {
                     if (e.health <= 0) {
                         enemies.splice(enemyIndex, 1);
                         killCount++;
-                        //addXP(e.type === "tank" ? 3 : 1);
                         addXP(e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1)
                     }
                     break;
@@ -125,8 +124,26 @@ export function resumeGame() {
     gameLoop();
 }
 
+function drawGrid() {
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < gameWidth; x += 50) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, gameHeight);
+        ctx.stroke();
+    }
+    for (let y = 0; y < gameHeight; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(gameWidth, y);
+        ctx.stroke();
+    }
+}
+
 function draw() {
     ctx.clearRect(0, 0, gameWidth, gameHeight);
+    drawGrid();
 
     const player = getPlayer();
     if (player) {
