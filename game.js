@@ -6,10 +6,10 @@ import { updateUI, showGameOver, updateWaveUI } from './ui.js';
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-export const gameWidth = 1000;
-export const gameHeight = 800;
-canvas.width = gameWidth;
-canvas.height = gameHeight;
+export const gameWidth = 3000; // Increased world size
+export const gameHeight = 3000;
+canvas.width = 1000;
+canvas.height = 800;
 
 let gameOver = false;
 let killCount = 0;
@@ -17,6 +17,9 @@ let waveNumber = 1;
 let enemySpawnRate = 2000;
 let projectileInterval;
 let gamePaused = false;
+
+const camera = { x: 0, y: 0, width: canvas.width, height: canvas.height };
+
 
 function startWave() {
     setInterval(() => {
@@ -30,7 +33,7 @@ function startWave() {
 }
 
 function spawnWaveEnemies() {
-    let enemyCount = 10 + waveNumber * 2;
+    let enemyCount = 50 + waveNumber * 2;
 
     if (waveNumber % 5 === 0) {
         spawnEnemy("boss");
@@ -53,11 +56,23 @@ function spawnWaveEnemies() {
     }
 }
 
+function enemyInView() {
+    return enemies.some(e => 
+        e.pos.x >= camera.x && e.pos.x <= camera.x + camera.width &&
+        e.pos.y >= camera.y && e.pos.y <= camera.y + camera.height
+    );
+}
+
 function updateProjectileInterval() {
     if (projectileInterval) clearInterval(projectileInterval);
     const player = getPlayer();
-    projectileInterval = setInterval(shootProjectiles, player.attackSpeed);
+    if (!player) return;
+    
+    if (enemyInView()) {
+        projectileInterval = setInterval(shootProjectiles, player.attackSpeed);
+    }
 }
+
 
 export function initializeGame() {
     initializePlayer();
@@ -66,12 +81,30 @@ export function initializeGame() {
     updateProjectileInterval();
 }
 
+function updateCamera() {
+    const player = getPlayer();
+    if (!player) return;
+    
+    camera.x = Math.max(0, Math.min(player.pos.x - camera.width / 2, gameWidth - camera.width));
+    camera.y = Math.max(0, Math.min(player.pos.y - camera.height / 2, gameHeight - camera.height));
+}
+
+
 export function gameLoop() {
     if (gameOver || gamePaused) return;
 
     handlePlayerMovement();
     updateProjectiles();
     updateEnemies();
+    updateCamera(); // ✅ Ensure the camera updates in every frame
+    if (enemyInView()) {
+        if (!projectileInterval) updateProjectileInterval();
+    } else {
+        if (projectileInterval) {
+            clearInterval(projectileInterval);
+            projectileInterval = null;
+        }
+    }
 
     const player = getPlayer();
     if (player) {
@@ -125,48 +158,40 @@ export function resumeGame() {
 }
 
 function drawGrid() {
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
     ctx.lineWidth = 1;
-    for (let x = 0; x < gameWidth; x += 50) {
+    for (let x = -camera.x % 50; x < canvas.width + 50; x += 50) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, gameHeight);
+        ctx.lineTo(x, canvas.height);
         ctx.stroke();
     }
-    for (let y = 0; y < gameHeight; y += 50) {
+    for (let y = -camera.y % 50; y < canvas.height + 50; y += 50) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(gameWidth, y);
+        ctx.lineTo(canvas.width, y);
         ctx.stroke();
     }
 }
 
 function draw() {
-    ctx.clearRect(0, 0, gameWidth, gameHeight);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
 
     const player = getPlayer();
     if (player) {
         ctx.fillStyle = "blue";
         ctx.beginPath();
-        ctx.arc(player.pos.x, player.pos.y, player.radius, 0, Math.PI * 2);
+        ctx.arc(player.pos.x - camera.x, player.pos.y - camera.y, player.radius, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    drawProjectiles(ctx);
+    drawProjectiles(ctx, camera);
 
     enemies.forEach(e => {
-        if (e.shield) {
-            ctx.strokeStyle = "lightblue";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(e.pos.x, e.pos.y, e.radius + 3, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-
         ctx.fillStyle = e.type === "boss" ? "red" : e.type === "tank" ? "yellow" : e.type === "shooter" ? "pink" : "green";
         ctx.beginPath();
-        ctx.arc(e.pos.x, e.pos.y, e.radius, 0, Math.PI * 2);
+        ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
     });
 }
