@@ -129,7 +129,7 @@ export function gameLoop() {
                     if (e.health <= 0) {
                         enemies.splice(enemyIndex, 1);
                         killCount++;
-                        addXP(e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1)
+                        addXP(e.type === "boss" ? 10 : e.type === "tank" ? 0 : e.type === "shooter" ? 0 : 0)
                     }
                     break;
                 }
