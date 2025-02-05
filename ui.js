@@ -12,6 +12,7 @@ export function updateUI(killCount) {
     document.getElementById("movementSpeedCounter").innerText = `Movement Speed: ${player.speed}`;
     document.getElementById("projectileStrengthCounter").innerText = `Projectile Strength: ${player.projectileStrength}`;
     document.getElementById("additionalProjectilesCounter").innerText = `Additional Projectiles: ${player.additionalProjectiles}`;
+    document.getElementById("healthCounter").innerText = `Health: ${player.health}`; // ✅ Added Health Display
 }
 
 export function updateWaveUI(waveNumber) {
@@ -43,7 +44,8 @@ export function showUpgradeOptions() {
         { text: "🔥 Attack Speed", effect: () => { getPlayer().attackSpeed = Math.max(200, getPlayer().attackSpeed - 100); } },
         { text: "⚡ Move Speed", effect: () => { getPlayer().speed += 0.5; } },
         { text: "💥 Damage", effect: () => { getPlayer().projectileStrength++; } },
-        { text: "🎯 Additional Projectile", effect: () => { getPlayer().additionalProjectiles++; } }
+        { text: "🎯 Additional Projectile", effect: () => { getPlayer().additionalProjectiles++; } },
+        { text: "❤️ Increase Health", effect: () => { getPlayer().health += 1; } } // ✅ Added Health Upgrade Option
     ];
 
     const shuffledUpgrades = upgradeOptions.sort(() => Math.random() - 0.5).slice(0, 4);

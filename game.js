@@ -20,7 +20,6 @@ let gamePaused = false;
 
 const camera = { x: 0, y: 0, width: canvas.width, height: canvas.height };
 
-
 function startWave() {
     setInterval(() => {
         if (!gameOver && !gamePaused) {
@@ -73,7 +72,6 @@ function updateProjectileInterval() {
     }
 }
 
-
 export function initializeGame() {
     initializePlayer();
     spawnWaveEnemies();
@@ -89,14 +87,13 @@ function updateCamera() {
     camera.y = Math.max(0, Math.min(player.pos.y - camera.height / 2, gameHeight - camera.height));
 }
 
-
 export function gameLoop() {
     if (gameOver || gamePaused) return;
 
     handlePlayerMovement();
     updateProjectiles();
     updateEnemies();
-    updateCamera(); // ✅ Ensure the camera updates in every frame
+    updateCamera();
     if (enemyInView()) {
         if (!projectileInterval) updateProjectileInterval();
     } else {
@@ -108,19 +105,44 @@ export function gameLoop() {
 
     const player = getPlayer();
     if (player) {
+        // Handle shooter enemy projectiles hitting the player
+        for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
+            const p = projectiles[projIndex];
+            if (p.enemyShot) { // Only process enemy projectiles
+                const distance = Math.hypot(p.pos.x - player.pos.x, p.pos.y - player.pos.y);
+                if (distance < p.radius + player.radius) {
+                    player.health -= 1;
+                    updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
+                    projectiles.splice(projIndex, 1); // Remove projectile
+                    if (player.health <= 0) {
+                        gameOver = true; // Ensure game state is updated
+                        stopGame();
+                        return;
+                    }
+                }
+            }
+        }
+
         enemies.forEach((e, enemyIndex) => {
             if (Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
-                stopGame();
-                return;
+                player.health -= 1;
+                updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
+                enemies.splice(enemyIndex, 1); // Remove enemy on collision
+                if (player.health <= 0) {
+                    gameOver = true; // Ensure game state is updated
+                    stopGame();
+                    return;
+                }
             }
 
             for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
                 const p = projectiles[projIndex];
                 const distance = Math.hypot(p.pos.x - e.pos.x, p.pos.y - e.pos.y);
 
-                if (p.enemyShot && e.type === "shooter") {
-                    continue;
+                if (p.enemyShot) {
+                    continue; // ✅ Completely skip enemy projectiles in enemy collision logic
                 }
+                
 
                 if (distance < p.radius + e.radius) {
                     e.health -= p.damage || 1;
@@ -129,7 +151,7 @@ export function gameLoop() {
                     if (e.health <= 0) {
                         enemies.splice(enemyIndex, 1);
                         killCount++;
-                        addXP(e.type === "boss" ? 10 : e.type === "tank" ? 0 : e.type === "shooter" ? 0 : 0)
+                        addXP(e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1);
                     }
                     break;
                 }
@@ -138,9 +160,11 @@ export function gameLoop() {
     }
 
     draw();
-    updateUI(killCount, player.xp, player.level, player.xpToNextLevel);
+    updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
     requestAnimationFrame(gameLoop);
 }
+
+
 
 export function stopGame() {
     gameOver = true;
