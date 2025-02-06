@@ -1,22 +1,17 @@
 import { getPlayer } from './player.js';
-import { enemies } from './enemies.js';
-import { gameWidth, gameHeight } from './game.js';
-import { pauseGame, resumeGame } from "./game.js"; // ✅ Ensure pauseGame is imported
+import { pauseGame, resumeGame } from "./game.js";
+import { UI } from "./constants.js";
 
-export function updateUI(killCount) {
+export function updateUI() {
     const player = getPlayer();
-    document.getElementById("killCounter").innerText = `Kills: ${killCount}`;
+    document.getElementById("killCounter").innerText = `Kills: ${player.killCount || 0}`;
     document.getElementById("xpCounter").innerText = `XP: ${player.xp} / ${player.xpToNextLevel}`;
     document.getElementById("levelCounter").innerText = `Level: ${player.level}`;
+    document.getElementById("healthCounter").innerText = `Health: ${player.health}`;
     document.getElementById("attackSpeedCounter").innerText = `Attack Speed: ${player.attackSpeed}ms`;
     document.getElementById("movementSpeedCounter").innerText = `Movement Speed: ${player.speed}`;
     document.getElementById("projectileStrengthCounter").innerText = `Projectile Strength: ${player.projectileStrength}`;
     document.getElementById("additionalProjectilesCounter").innerText = `Additional Projectiles: ${player.additionalProjectiles}`;
-    document.getElementById("healthCounter").innerText = `Health: ${player.health}`; // ✅ Added Health Display
-}
-
-export function updateWaveUI(waveNumber) {
-    document.getElementById("waveCounter").innerText = `Wave: ${waveNumber}`;
 }
 
 export function showUpgradeOptions() {
@@ -41,11 +36,10 @@ export function showUpgradeOptions() {
     upgradeContainer.appendChild(title);
 
     const upgradeOptions = [
-        { text: "🔥 Attack Speed", effect: () => { getPlayer().attackSpeed = Math.max(200, getPlayer().attackSpeed - 100); } },
-        { text: "⚡ Move Speed", effect: () => { getPlayer().speed += 0.5; } },
-        { text: "💥 Damage", effect: () => { getPlayer().projectileStrength++; } },
-        { text: "🎯 Additional Projectile", effect: () => { getPlayer().additionalProjectiles++; } },
-        { text: "❤️ Increase Health", effect: () => { getPlayer().health += 1; } } // ✅ Added Health Upgrade Option
+        { text: "🔥 Attack Speed", effect: () => { player.attackSpeed = Math.max(200, player.attackSpeed - 100); } },
+        { text: "⚡ Move Speed", effect: () => { player.speed += 0.5; } },
+        { text: "💥 Damage", effect: () => { player.projectileStrength++; } },
+        { text: "🎯 Additional Projectile", effect: () => { player.additionalProjectiles++; } }
     ];
 
     const shuffledUpgrades = upgradeOptions.sort(() => Math.random() - 0.5).slice(0, 4);

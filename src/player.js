@@ -1,23 +1,24 @@
-import { gameWidth, gameHeight } from './game.js';
+import { GAME_WIDTH, GAME_HEIGHT, PLAYER } from './constants.js';
 import { showUpgradeOptions } from './ui.js';
 
 let player;
+
 const keys = { w: false, a: false, s: false, d: false };
 
 export function initializePlayer() {
     player = {
-        pos: { x: gameWidth / 2, y: gameHeight / 2 },
-        speed: 3,
-        radius: 10,
+        pos: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
+        speed: PLAYER.SPEED,
+        radius: PLAYER.RADIUS,
         xp: 0,
         level: 1,
         xpToNextLevel: 5,
-        attackSpeed: 2000,
-        projectileStrength: 1,
-        additionalProjectiles: 0,
-        weapon: "shotgun", // ✅ Default weapon before upgrading
-        health: 1 // ✅ New Health System
-    };    
+        attackSpeed: PLAYER.ATTACK_SPEED,
+        projectileStrength: PLAYER.PROJECTILE_STRENGTH,
+        additionalProjectiles: PLAYER.ADDITIONAL_PROJECTILES,
+        weapon: "shotgun", // Default weapon before upgrading
+        health: PLAYER.HEALTH // Health System
+    };
 }
 
 export function getPlayer() {
@@ -26,7 +27,6 @@ export function getPlayer() {
 
 export function addXP(amount) {
     player.xp += amount;
-
     if (player.xp >= player.xpToNextLevel) {
         levelUp();
     }
@@ -41,21 +41,19 @@ function levelUp() {
 
 export function handlePlayerMovement() {
     if (keys.w && player.pos.y > 0) player.pos.y -= player.speed;
-    if (keys.s && player.pos.y < gameHeight - player.radius * 2) player.pos.y += player.speed;
+    if (keys.s && player.pos.y < GAME_HEIGHT - player.radius * 2) player.pos.y += player.speed;
     if (keys.a && player.pos.x > 0) player.pos.x -= player.speed;
-    if (keys.d && player.pos.x < gameWidth - player.radius * 2) player.pos.x += player.speed;
+    if (keys.d && player.pos.x < GAME_WIDTH - player.radius * 2) player.pos.x += player.speed;
 }
 
-export function unlockNewWeapon() {
-    alert("New Weapon Unlocked: Shotgun!");
-    const player = getPlayer();
-    player.weapon = "shotgun"; // ✅ Ensure the weapon changes
-    console.log("Weapon changed to:", player.weapon); // ✅ Debugging log
-}
-
-document.addEventListener("keydown", (e) => {
-    if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+window.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() in keys) {
+        keys[e.key.toLowerCase()] = true;
+    }
 });
-document.addEventListener("keyup", (e) => {
-    if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+
+window.addEventListener("keyup", (e) => {
+    if (e.key.toLowerCase() in keys) {
+        keys[e.key.toLowerCase()] = false;
+    }
 });
