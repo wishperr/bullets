@@ -12,10 +12,11 @@ export function initializePlayer() {
         xp: 0,
         level: 1,
         xpToNextLevel: 5,
-        attackSpeed: 500,
+        attackSpeed: 2000,
         projectileStrength: 1,
         additionalProjectiles: 0,
-        weapon: "shotgun" // ✅ Default weapon before upgrading
+        weapon: "shotgun", // ✅ Default weapon before upgrading
+        health: 1 // ✅ New Health System
     };    
 }
 
@@ -51,7 +52,6 @@ export function unlockNewWeapon() {
     player.weapon = "shotgun"; // ✅ Ensure the weapon changes
     console.log("Weapon changed to:", player.weapon); // ✅ Debugging log
 }
-
 
 document.addEventListener("keydown", (e) => {
     if (keys.hasOwnProperty(e.key)) keys[e.key] = true;

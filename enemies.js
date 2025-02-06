@@ -18,9 +18,19 @@ export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) 
 
     let enemy;
     if (type === "tank") {
-        enemy = { pos: { x, y }, radius: 20, health: 5, type: "tank" };
+        enemy = { 
+            pos: { x, y }, 
+            radius: 20, 
+            health: 5, 
+            type: "tank" 
+        };
     } else if (type === "boss") {
-        enemy = { pos: { x, y }, radius: 40, health: 20, type: "boss" };
+        enemy = { 
+            pos: { x, y }, 
+            radius: 40, 
+            health: 20, 
+            type: "boss" 
+        };
     } else if (type === "shooter") {
         enemy = { 
             pos: { x, y }, 
@@ -32,7 +42,12 @@ export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) 
             lastShot: Date.now() 
         };
     } else {
-        enemy = { pos: { x, y }, radius: 10, health: 1, type: "normal" };
+        enemy = { 
+            pos: { x, y }, 
+            radius: 10, 
+            health: 1, 
+            type: "normal" 
+        };
     }
 
     if (isShielded) {

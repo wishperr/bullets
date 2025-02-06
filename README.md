@@ -10,6 +10,9 @@ Base version.
   -- boss
 - waves
 
+04.02.2025 - added a bigger game field
+04.02.2025 - added camera movement
+
 PoC setup with a simple pythin webserver
 python3 -m http.server 8000
 http://localhost:8000
