@@ -32,22 +32,22 @@ function startWave() {
 }
 
 function spawnWaveEnemies() {
-    let enemyCount = 50 + waveNumber * 2;
+    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
 
-    if (waveNumber % 5 === 0) {
+    if (waveNumber % WAVE.BOSS_SPAWN_INTERVAL === 0) {
         spawnEnemy("boss");
     }
 
     for (let i = 0; i < enemyCount; i++) {
         let type = "normal";
 
-        if (Math.random() < 0.2 + waveNumber * 0.02) {
+        if (Math.random() < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
             type = "tank";
         }
 
-        if (waveNumber >= 5 && Math.random() < 0.3) {
+        if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
             spawnEnemy(type, waveNumber, true);
-        } else if (waveNumber % 1 === 0 && Math.random() < 0.4) {
+        } else if (waveNumber % WAVE.SHIELDED_SPAWN_INTERVAL === 0 && Math.random() < WAVE.SHOOTER_SPAWN_CHANCE) {
             spawnEnemy("shooter", waveNumber);
         } else {
             spawnEnemy(type);
