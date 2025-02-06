@@ -123,29 +123,34 @@ export function gameLoop() {
         }
 
         enemies.forEach((e, enemyIndex) => {
+            // Check if the player collides with an enemy
             if (Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
-                player.health -= 1;
+                player.health -= e.damage || 1; // Use enemy's damage from constants
                 updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
+        
                 enemies.splice(enemyIndex, 1); // Remove enemy on collision
+        
                 if (player.health <= 0) {
                     gameOver = true; // Ensure game state is updated
                     stopGame();
                     return;
                 }
             }
-
+        
+            // Handle player projectiles hitting enemies
             for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
                 const p = projectiles[projIndex];
+                
+                // Ensure enemy projectiles don't damage enemies
+                if (p.enemyShot) continue;
+        
                 const distance = Math.hypot(p.pos.x - e.pos.x, p.pos.y - e.pos.y);
-
-                if (p.enemyShot) {
-                    continue;
-                }
-
+        
                 if (distance < p.radius + e.radius) {
-                    e.health -= p.damage || 1;
-                    projectiles.splice(projIndex, 1);
-
+                    e.health -= p.damage || PROJECTILE.DAMAGE; // Use defined projectile damage
+        
+                    projectiles.splice(projIndex, 1); // Remove projectile
+        
                     if (e.health <= 0) {
                         enemies.splice(enemyIndex, 1);
                         killCount++;
@@ -155,6 +160,7 @@ export function gameLoop() {
                 }
             }
         });
+        
     }
 
     draw();
@@ -210,8 +216,12 @@ function draw() {
 
     enemies.forEach(e => {
         ctx.fillStyle = e.type === "boss" ? "red" : e.type === "tank" ? "yellow" : e.type === "shooter" ? "pink" : "green";
+    
         ctx.beginPath();
         ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
+    
+        //console.log(`Drawing ${e.type} at (${e.pos.x}, ${e.pos.y}) with radius ${e.radius}`);
     });
+    
 }

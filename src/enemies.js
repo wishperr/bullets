@@ -1,18 +1,11 @@
 import { getPlayer, addXP } from './player.js';
 import { projectiles } from './projectiles.js';
-import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE } from './constants.js';
+import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE, PROJECTILE } from './constants.js';
 
 export let enemies = [];
 let normalEnemyKillCount = 0;
 
-export function spawnEnemy(type = "NORMAL", waveNumber = 1, isShielded = false) {
-    const enemyData = ENEMY_TYPES[type.toUpperCase()];
-    
-    if (!enemyData) {
-        console.error(`Enemy type "${type}" is not defined in ENEMY_TYPES`);
-        return;
-    }
-
+export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) {
     const edge = Math.floor(Math.random() * 4);
     let x, y;
     switch (edge) {
@@ -22,26 +15,24 @@ export function spawnEnemy(type = "NORMAL", waveNumber = 1, isShielded = false) 
         case 3: x = GAME_WIDTH; y = Math.random() * GAME_HEIGHT; break;
     }
 
+    let enemyConfig = ENEMY_TYPES[type.toUpperCase()] || ENEMY_TYPES.NORMAL;
+
     let enemy = {
         pos: { x, y },
-        radius: enemyData.RADIUS || 10,
-        health: enemyData.HEALTH || 1,
-        speed: enemyData.SPEED || 1,
-        type: type.toLowerCase()
+        radius: enemyConfig.RADIUS, // ✅ Now correctly setting the radius
+        health: enemyConfig.HEALTH,
+        damage: enemyConfig.DAMAGE,
+        speed: enemyConfig.SPEED,
+        type: type,
+        shoots: type === "shooter",
+        shootCooldown: enemyConfig.SHOOT_COOLDOWN || 0,
+        lastShot: Date.now(),
     };
 
-    if (type === "SHOOTER") {
-        enemy.shoots = true;
-        enemy.shootCooldown = enemyData.SHOOT_COOLDOWN;
-        enemy.lastShot = Date.now();
-    }
-
-    if (isShielded) {
-        enemy.shield = 3;
-    }
-
     enemies.push(enemy);
+   // console.log(`Spawned ${type} at (${x}, ${y}) with radius ${enemy.radius} and health ${enemy.health}`);
 }
+
 
 
 export function spawnWaveEnemies(waveNumber) {
@@ -72,36 +63,35 @@ export function updateEnemies() {
     const player = getPlayer();
     if (!player) return;
 
-    enemies.forEach((e, enemyIndex) => {
+    enemies.forEach(e => {
         const dx = player.pos.x - e.pos.x;
         const dy = player.pos.y - e.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (e.type === "SHOOTER" && dist > 150) {
+        if (e.type === "shooter" && dist > 150) {
             e.pos.x += (dx / dist) * e.speed;
             e.pos.y += (dy / dist) * e.speed;
-        } else if (e.type !== "SHOOTER") {
-            e.pos.x += (dx / dist) * e.speed;
-            e.pos.y += (dy / dist) * e.speed;
-        }
 
-        if (e.shoots) {
             if (!e.lastShot) e.lastShot = Date.now();
             if (Date.now() - e.lastShot > e.shootCooldown) {
                 let angle = Math.atan2(dy, dx);
                 projectiles.push({
                     pos: { x: e.pos.x, y: e.pos.y },
-                    vel: { x: Math.cos(angle) * 4, y: Math.sin(angle) * 4 },
-                    radius: 5,
-                    damage: 1,
+                    vel: { x: Math.cos(angle) * PROJECTILE.ENEMY_SPEED, y: Math.sin(angle) * PROJECTILE.ENEMY_SPEED },
+                    radius: PROJECTILE.ENEMY_RADIUS,
+                    damage: ENEMY_TYPES.SHOOTER.DAMAGE,
                     enemyShot: true,
                     color: "cyan"
                 });
                 e.lastShot = Date.now();
             }
+        } else if (e.type !== "shooter") {
+            e.pos.x += (dx / dist) * e.speed;
+            e.pos.y += (dy / dist) * e.speed;
         }
     });
 }
+
 
 // Getters and counters for normal enemy kills
 export function getNormalEnemyKillCount() {
