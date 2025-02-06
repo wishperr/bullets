@@ -1,24 +1,23 @@
-import { initializePlayer, getPlayer, handlePlayerMovement, addXP, unlockNewWeapon } from './player.js';
+import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI } from './ui.js';
+import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE } from './constants.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-export const gameWidth = 3000; // Increased world size
-export const gameHeight = 3000;
-canvas.width = 1000;
-canvas.height = 800;
+canvas.width = CAMERA.WIDTH;
+canvas.height = CAMERA.HEIGHT;
+
+const camera = { x: 0, y: 0, width: CAMERA.WIDTH, height: CAMERA.HEIGHT };
 
 let gameOver = false;
 let killCount = 0;
 let waveNumber = 1;
-let enemySpawnRate = 2000;
+let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
 let gamePaused = false;
-
-const camera = { x: 0, y: 0, width: canvas.width, height: canvas.height };
 
 function startWave() {
     setInterval(() => {
@@ -28,7 +27,7 @@ function startWave() {
             spawnWaveEnemies();
             updateWaveUI(waveNumber);
         }
-    }, 20000);
+    }, WAVE_SPAWN_RATE);
 }
 
 function spawnWaveEnemies() {
@@ -83,8 +82,8 @@ function updateCamera() {
     const player = getPlayer();
     if (!player) return;
     
-    camera.x = Math.max(0, Math.min(player.pos.x - camera.width / 2, gameWidth - camera.width));
-    camera.y = Math.max(0, Math.min(player.pos.y - camera.height / 2, gameHeight - camera.height));
+    camera.x = Math.max(0, Math.min(player.pos.x - camera.width / 2, GAME_WIDTH - camera.width));
+    camera.y = Math.max(0, Math.min(player.pos.y - camera.height / 2, GAME_HEIGHT - camera.height));
 }
 
 export function gameLoop() {
@@ -140,9 +139,8 @@ export function gameLoop() {
                 const distance = Math.hypot(p.pos.x - e.pos.x, p.pos.y - e.pos.y);
 
                 if (p.enemyShot) {
-                    continue; // ✅ Completely skip enemy projectiles in enemy collision logic
+                    continue;
                 }
-                
 
                 if (distance < p.radius + e.radius) {
                     e.health -= p.damage || 1;
@@ -163,8 +161,6 @@ export function gameLoop() {
     updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
     requestAnimationFrame(gameLoop);
 }
-
-
 
 export function stopGame() {
     gameOver = true;

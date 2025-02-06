@@ -5,6 +5,11 @@ export const GAME_WIDTH = 3000;
 export const GAME_HEIGHT = 3000;
 export const WAVE_SPAWN_RATE = 20000; // Time in milliseconds between waves
 
+// Viewpoint/camera settings
+export const CAMERA = {
+    WIDTH: 1000,  // Viewport width
+    HEIGHT: 800   // Viewport height
+};
 // Player Settings
 export const PLAYER = {
     SPEED: 3,
