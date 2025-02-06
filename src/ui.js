@@ -75,3 +75,7 @@ export function showGameOver() {
     gameOverText.style.fontWeight = "bold";
     document.body.appendChild(gameOverText);
 }
+
+export function updateWaveUI(waveNumber) {
+    document.getElementById("waveCounter").innerText = `Wave: ${waveNumber}`;
+}
