@@ -6,6 +6,13 @@ export let enemies = [];
 let normalEnemyKillCount = 0;
 
 export function spawnEnemy(type = "NORMAL", waveNumber = 1, isShielded = false) {
+    const enemyData = ENEMY_TYPES[type.toUpperCase()];
+    
+    if (!enemyData) {
+        console.error(`Enemy type "${type}" is not defined in ENEMY_TYPES`);
+        return;
+    }
+
     const edge = Math.floor(Math.random() * 4);
     let x, y;
     switch (edge) {
@@ -15,18 +22,17 @@ export function spawnEnemy(type = "NORMAL", waveNumber = 1, isShielded = false) 
         case 3: x = GAME_WIDTH; y = Math.random() * GAME_HEIGHT; break;
     }
 
-    let enemyData = ENEMY_TYPES[type];
     let enemy = {
         pos: { x, y },
         radius: enemyData.RADIUS || 10,
-        health: enemyData.HEALTH || 3,
-        speed: enemyData.SPEED || 2,
-        type,
+        health: enemyData.HEALTH || 1,
+        speed: enemyData.SPEED || 1,
+        type: type.toLowerCase()
     };
 
     if (type === "SHOOTER") {
         enemy.shoots = true;
-        enemy.shootCooldown = enemyData.SHOOT_COOLDOWN || 2000;
+        enemy.shootCooldown = enemyData.SHOOT_COOLDOWN;
         enemy.lastShot = Date.now();
     }
 
@@ -36,6 +42,7 @@ export function spawnEnemy(type = "NORMAL", waveNumber = 1, isShielded = false) 
 
     enemies.push(enemy);
 }
+
 
 export function spawnWaveEnemies(waveNumber) {
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
