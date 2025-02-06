@@ -1,53 +1,33 @@
-import { getPlayer } from './player.js';
-import { gameWidth, gameHeight } from './game.js';
+import { getPlayer, addXP } from './player.js';
 import { projectiles } from './projectiles.js';
+import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE } from './constants.js';
 
-export const enemies = [];
-const enemySpeed = 1.5;
+export let enemies = [];
 let normalEnemyKillCount = 0;
 
-export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) {
+export function spawnEnemy(type = "NORMAL", waveNumber = 1, isShielded = false) {
     const edge = Math.floor(Math.random() * 4);
     let x, y;
     switch (edge) {
-        case 0: x = Math.random() * gameWidth; y = 0; break;
-        case 1: x = Math.random() * gameWidth; y = gameHeight; break;
-        case 2: x = 0; y = Math.random() * gameHeight; break;
-        case 3: x = gameWidth; y = Math.random() * gameHeight; break;
+        case 0: x = Math.random() * GAME_WIDTH; y = 0; break;
+        case 1: x = Math.random() * GAME_WIDTH; y = GAME_HEIGHT; break;
+        case 2: x = 0; y = Math.random() * GAME_HEIGHT; break;
+        case 3: x = GAME_WIDTH; y = Math.random() * GAME_HEIGHT; break;
     }
 
-    let enemy;
-    if (type === "tank") {
-        enemy = { 
-            pos: { x, y }, 
-            radius: 20, 
-            health: 5, 
-            type: "tank" 
-        };
-    } else if (type === "boss") {
-        enemy = { 
-            pos: { x, y }, 
-            radius: 40, 
-            health: 20, 
-            type: "boss" 
-        };
-    } else if (type === "shooter") {
-        enemy = { 
-            pos: { x, y }, 
-            radius: 15, 
-            health: 2, 
-            type: "shooter", 
-            shoots: true, 
-            shootCooldown: 2000, 
-            lastShot: Date.now() 
-        };
-    } else {
-        enemy = { 
-            pos: { x, y }, 
-            radius: 10, 
-            health: 1, 
-            type: "normal" 
-        };
+    let enemyData = ENEMY_TYPES[type];
+    let enemy = {
+        pos: { x, y },
+        radius: enemyData.RADIUS || 10,
+        health: enemyData.HEALTH || 3,
+        speed: enemyData.SPEED || 2,
+        type,
+    };
+
+    if (type === "SHOOTER") {
+        enemy.shoots = true;
+        enemy.shootCooldown = enemyData.SHOOT_COOLDOWN || 2000;
+        enemy.lastShot = Date.now();
     }
 
     if (isShielded) {
@@ -57,21 +37,45 @@ export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) 
     enemies.push(enemy);
 }
 
+export function spawnWaveEnemies(waveNumber) {
+    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
+
+    if (waveNumber % WAVE.BOSS_SPAWN_INTERVAL === 0) {
+        spawnEnemy("BOSS");
+    }
+
+    for (let i = 0; i < enemyCount; i++) {
+        let type = "NORMAL";
+
+        if (Math.random() < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
+            type = "TANK";
+        }
+
+        if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
+            spawnEnemy(type, waveNumber, true);
+        } else if (waveNumber % WAVE.SHIELDED_SPAWN_INTERVAL === 0 && Math.random() < WAVE.SHOOTER_SPAWN_CHANCE) {
+            spawnEnemy("SHOOTER", waveNumber);
+        } else {
+            spawnEnemy(type);
+        }
+    }
+}
+
 export function updateEnemies() {
     const player = getPlayer();
     if (!player) return;
 
-    enemies.forEach(e => {
+    enemies.forEach((e, enemyIndex) => {
         const dx = player.pos.x - e.pos.x;
         const dy = player.pos.y - e.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (e.type === "shooter" && dist > 150) {
-            e.pos.x += (dx / dist) * enemySpeed;
-            e.pos.y += (dy / dist) * enemySpeed;
-        } else if (e.type !== "shooter") {
-            e.pos.x += (dx / dist) * enemySpeed;
-            e.pos.y += (dy / dist) * enemySpeed;
+        if (e.type === "SHOOTER" && dist > 150) {
+            e.pos.x += (dx / dist) * e.speed;
+            e.pos.y += (dy / dist) * e.speed;
+        } else if (e.type !== "SHOOTER") {
+            e.pos.x += (dx / dist) * e.speed;
+            e.pos.y += (dy / dist) * e.speed;
         }
 
         if (e.shoots) {
@@ -84,7 +88,7 @@ export function updateEnemies() {
                     radius: 5,
                     damage: 1,
                     enemyShot: true,
-                    color: "cyan" // ✅ Ensures color property is set
+                    color: "cyan"
                 });
                 e.lastShot = Date.now();
             }
@@ -92,6 +96,7 @@ export function updateEnemies() {
     });
 }
 
+// Getters and counters for normal enemy kills
 export function getNormalEnemyKillCount() {
     return normalEnemyKillCount;
 }
