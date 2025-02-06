@@ -1,17 +1,17 @@
 import { getPlayer } from './player.js';
+import { updateUI, showGameOver } from './ui.js';
+import { stopGame } from './game.js';
 import { enemies } from './enemies.js';
 import { gameWidth, gameHeight } from './game.js';
-import { showGameOver } from './ui.js';
-import { stopGame } from './game.js';
 
-export const projectiles = [];
+export let projectiles = [];
 
 export function shootProjectiles() {
     const player = getPlayer();
     if (!player) return;
 
     const closestEnemy = findClosestEnemy(player);
-    let baseProjectiles = 3 + (player.additionalProjectiles || 0); // Ensure additionalProjectiles is defined
+    let baseProjectiles = 3 + (player.additionalProjectiles || 0);
 
     if (player.weapon && player.weapon === "shotgun") {
         if (!closestEnemy) return;
@@ -36,12 +36,7 @@ export function shootProjectiles() {
                 damage: player.projectileStrength || 1,
                 enemyShot: false
             };
-
-            if (!newProjectile.pos || typeof newProjectile.pos.x !== "number") {
-                console.error("❌ Error: Projectile created with invalid position!", newProjectile);
-            } else {
-                projectiles.push(newProjectile);
-            }
+            projectiles.push(newProjectile);
         }
     } else {
         let velocity = { x: 0, y: -5 };
@@ -59,19 +54,12 @@ export function shootProjectiles() {
             damage: player.projectileStrength || 1,
             enemyShot: false
         };
-
-        if (!newProjectile.pos || typeof newProjectile.pos.x !== "number") {
-            console.error("❌ Error: Projectile created with invalid position!", newProjectile);
-        } else {
-            projectiles.push(newProjectile);
-        }
+        projectiles.push(newProjectile);
     }
 }
 
-
 function findClosestEnemy(player) {
     if (enemies.length === 0) return null;
-
     let closestEnemy = null;
     let minDistance = Infinity;
 
@@ -94,40 +82,34 @@ export function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
 
-        if (!p || !p.pos || typeof p.pos.x !== "number" || typeof p.pos.y !== "number") {
-            console.warn(`❌ Removing undefined projectile at index ${i}`, p);
-            projectiles.splice(i, 1);
-            continue;
-        }
-
         p.pos.x += p.vel.x;
         p.pos.y += p.vel.y;
 
+        // Check for enemy projectile collisions with the player
         if (p.enemyShot) {
             const dist = Math.hypot(player.pos.x - p.pos.x, player.pos.y - p.pos.y);
             if (dist < player.radius + p.radius) {
-                stopGame();
-                return;
+                player.health -= 1;
+                updateUI();
+                projectiles.splice(i, 1);
+
+                if (player.health <= 0) {
+                    stopGame();
+                    return;
+                }
             }
+            continue; // ✅ Ensure enemy projectiles don't interact with other enemies
         }
 
+        // Remove projectiles that leave the screen
         if (p.pos.x < 0 || p.pos.x > gameWidth || p.pos.y < 0 || p.pos.y > gameHeight) {
             projectiles.splice(i, 1);
         }
     }
 }
 
-
-
-
 export function drawProjectiles(ctx, camera) {
     projectiles.forEach((p, index) => {
-        if (!p || !p.pos || typeof p.pos.x !== "number" || typeof p.pos.y !== "number") {
-            console.warn(`Skipping invalid projectile at index ${index}:`, p);
-            return;
-        }
-
-        // Only draw projectiles that are within the visible camera area
         if (
             p.pos.x >= camera.x && p.pos.x <= camera.x + camera.width &&
             p.pos.y >= camera.y && p.pos.y <= camera.y + camera.height
@@ -139,7 +121,3 @@ export function drawProjectiles(ctx, camera) {
         }
     });
 }
-
-
-
-
