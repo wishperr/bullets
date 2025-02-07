@@ -1,8 +1,8 @@
 import { getPlayer } from './player.js';
-import { updateUI, showGameOver } from './ui.js';
-import { stopGame } from './game.js';
 import { enemies } from './enemies.js';
-import { gameWidth, gameHeight } from './game.js';
+import { stopGame } from './game.js';
+import { PROJECTILE, GAME_WIDTH, GAME_HEIGHT } from './constants.js';
+import { updateUI } from './ui.js';
 
 export let projectiles = [];
 
@@ -11,9 +11,9 @@ export function shootProjectiles() {
     if (!player) return;
 
     const closestEnemy = findClosestEnemy(player);
-    let baseProjectiles = 3 + (player.additionalProjectiles || 0);
+    let baseProjectiles = 2 + player.additionalProjectiles; // Using constant for additional projectiles
 
-    if (player.weapon && player.weapon === "shotgun") {
+    if (player.weapon === "shotgun") {
         if (!closestEnemy) return;
 
         const dx = closestEnemy.pos.x - player.pos.x;
@@ -25,67 +25,54 @@ export function shootProjectiles() {
             let finalAngle = baseAngle + spreadOffset;
 
             let velocity = {
-                x: Math.cos(finalAngle) * 5,
-                y: Math.sin(finalAngle) * 5
+                x: Math.cos(finalAngle) * PROJECTILE.SPEED,
+                y: Math.sin(finalAngle) * PROJECTILE.SPEED
             };
 
-            const newProjectile = {
+            projectiles.push({
                 pos: { x: player.pos.x, y: player.pos.y },
                 vel: velocity,
-                radius: 5,
-                damage: player.projectileStrength || 1,
+                radius: PROJECTILE.RADIUS,
+                damage: player.projectileStrength,
                 enemyShot: false
-            };
-            projectiles.push(newProjectile);
+            });
         }
     } else {
-        let velocity = { x: 0, y: -5 };
+        let velocity = { x: 0, y: -PROJECTILE.SPEED };
         if (closestEnemy) {
             const dx = closestEnemy.pos.x - player.pos.x;
             const dy = closestEnemy.pos.y - player.pos.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            velocity = { x: (dx / distance) * 5, y: (dy / distance) * 5 };
+            velocity = { x: (dx / distance) * PROJECTILE.SPEED, y: (dy / distance) * PROJECTILE.SPEED };
         }
 
-        const newProjectile = {
+        projectiles.push({
             pos: { x: player.pos.x, y: player.pos.y },
             vel: velocity,
-            radius: 5,
-            damage: player.projectileStrength || 1,
+            radius: PROJECTILE.RADIUS,
+            damage: player.projectileStrength,
             enemyShot: false
-        };
-        projectiles.push(newProjectile);
+        });
     }
 }
 
 function findClosestEnemy(player) {
     if (enemies.length === 0) return null;
-    let closestEnemy = null;
-    let minDistance = Infinity;
-
-    enemies.forEach(enemy => {
+    return enemies.reduce((closest, enemy) => {
         const dx = enemy.pos.x - player.pos.x;
         const dy = enemy.pos.y - player.pos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < minDistance) {
-            minDistance = distance;
-            closestEnemy = enemy;
-        }
-    });
-
-    return closestEnemy;
+        return distance < (closest?.distance || Infinity) ? { enemy, distance } : closest;
+    }, null)?.enemy;
 }
 
 export function updateProjectiles() {
     const player = getPlayer();
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
-
         p.pos.x += p.vel.x;
         p.pos.y += p.vel.y;
 
-        // Check for enemy projectile collisions with the player
         if (p.enemyShot) {
             const dist = Math.hypot(player.pos.x - p.pos.x, player.pos.y - p.pos.y);
             if (dist < player.radius + p.radius) {
@@ -98,22 +85,19 @@ export function updateProjectiles() {
                     return;
                 }
             }
-            continue; // ✅ Ensure enemy projectiles don't interact with other enemies
+            continue;
         }
 
-        // Remove projectiles that leave the screen
-        if (p.pos.x < 0 || p.pos.x > gameWidth || p.pos.y < 0 || p.pos.y > gameHeight) {
+        if (p.pos.x < 0 || p.pos.x > GAME_WIDTH || p.pos.y < 0 || p.pos.y > GAME_HEIGHT) {
             projectiles.splice(i, 1);
         }
     }
 }
 
 export function drawProjectiles(ctx, camera) {
-    projectiles.forEach((p, index) => {
-        if (
-            p.pos.x >= camera.x && p.pos.x <= camera.x + camera.width &&
-            p.pos.y >= camera.y && p.pos.y <= camera.y + camera.height
-        ) {
+    projectiles.forEach(p => {
+        if (p.pos.x >= camera.x && p.pos.x <= camera.x + camera.width &&
+            p.pos.y >= camera.y && p.pos.y <= camera.y + camera.height) {
             ctx.fillStyle = p.enemyShot ? "cyan" : "red";
             ctx.beginPath();
             ctx.arc(p.pos.x - camera.x, p.pos.y - camera.y, p.radius, 0, Math.PI * 2);
