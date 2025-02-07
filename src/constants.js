@@ -67,7 +67,7 @@ export const WAVE = {
     SHOOTER_SPAWN_CHANCE: 0.4,
     BOSS_SPAWN_INTERVAL: 5, // Spawn a boss every 5 waves
     SHIELDED_SPAWN_INTERVAL: 1, // Spawn shielded enemies every wave
-    SHIELDED_SPAWN_CHANCE: 0.3
+    SHIELDED_SPAWN_CHANCE: 0.1 // % chance to spawn enemies with shield
 };
 
 // Obstacle Settings
