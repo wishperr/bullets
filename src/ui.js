@@ -39,7 +39,9 @@ export function showUpgradeOptions() {
         { text: "🔥 Attack Speed", effect: () => { player.attackSpeed = Math.max(200, player.attackSpeed - 100); } },
         { text: "⚡ Move Speed", effect: () => { player.speed += 0.5; } },
         { text: "💥 Damage", effect: () => { player.projectileStrength++; } },
-        { text: "🎯 Additional Projectile", effect: () => { player.additionalProjectiles++; } }
+        { text: "🎯 Additional Projectile", effect: () => { player.additionalProjectiles++; } },
+        { text: "❤️ Increase Health", effect: () => { getPlayer().health += 1; } } // ✅ Added Health Upgrade Option
+
     ];
 
     const shuffledUpgrades = upgradeOptions.sort(() => Math.random() - 0.5).slice(0, 4);
