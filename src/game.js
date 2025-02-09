@@ -18,7 +18,7 @@ let killCount = 0;
 let waveNumber = 1;
 let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
-let gamePaused = false;
+export let gamePaused = false;
 
 function startWave() {
     setInterval(() => {
@@ -234,6 +234,14 @@ function draw() {
         ctx.fill();
     }
 
+    if (player.invincible) {
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(player.pos.x - camera.x, player.pos.y - camera.y, player.radius + 10, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
     drawProjectiles(ctx, camera);
 
     enemies.forEach(e => {

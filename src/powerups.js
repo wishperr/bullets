@@ -1,6 +1,8 @@
 import { getPlayer } from './player.js';
 import { enemies } from './enemies.js';
 import { CAMERA } from './constants.js';
+import { gamePaused } from "./game.js";
+import { updateUI } from "./ui.js";
 
 export let powerups = [];
 
@@ -37,14 +39,34 @@ function handlePowerupEffect(type) {
             break;
         case "invincible":
             player.invincible = true;
+            player.invincibleRemaining = 5000; // Store remaining time
             console.log("Player is now invincible for 5 seconds!");
-            setTimeout(() => {
-                player.invincible = false;
-                console.log("Invincibility wore off.");
-            }, 5000);
+
+            function countdownInvincibility() {
+                if (!player.invincible) return; // If it was removed, stop the countdown
+
+                if (gamePaused) {
+                    setTimeout(countdownInvincibility, 1000); // Wait and retry
+                    return;
+                }
+
+                player.invincibleRemaining -= 1000;
+                updateUI(); // Update UI countdown
+
+                if (player.invincibleRemaining > 0) {
+                    setTimeout(countdownInvincibility, 1000);
+                } else {
+                    player.invincible = false;
+                    console.log("Invincibility wore off.");
+                    updateUI();
+                }
+            }
+
+            countdownInvincibility();
             break;
     }
 }
+
 
 function killAllEnemiesInView() {
     const player = getPlayer();

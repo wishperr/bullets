@@ -4,15 +4,25 @@ import { UI } from "./constants.js";
 
 export function updateUI() {
     const player = getPlayer();
+    
     document.getElementById("killCounter").innerText = `Kills: ${player.killCount || 0}`;
     document.getElementById("xpCounter").innerText = `XP: ${player.xp} / ${player.xpToNextLevel}`;
     document.getElementById("levelCounter").innerText = `Level: ${player.level}`;
-    document.getElementById("healthCounter").innerText = `Health: ${player.health} ${player.invincible ? "(Invincible)" : ""}`;
+    
+    // Properly display remaining invincibility time
+    let invincibilityText = "";
+    if (player.invincible) {
+        let remainingSeconds = Math.ceil(player.invincibleRemaining / 1000);
+        invincibilityText = ` (Invincible ${remainingSeconds})`;
+    }
+
+    document.getElementById("healthCounter").innerText = `Health: ${player.health}${invincibilityText}`;
     document.getElementById("attackSpeedCounter").innerText = `Attack Speed: ${player.attackSpeed}ms`;
     document.getElementById("movementSpeedCounter").innerText = `Movement Speed: ${player.speed}`;
     document.getElementById("projectileStrengthCounter").innerText = `Projectile Strength: ${player.projectileStrength}`;
     document.getElementById("additionalProjectilesCounter").innerText = `Additional Projectiles: ${player.additionalProjectiles}`;
 }
+
 
 export function showUpgradeOptions() {
     const player = getPlayer();
