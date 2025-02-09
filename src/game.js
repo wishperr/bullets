@@ -2,9 +2,7 @@ import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './play
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI } from './ui.js';
-import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
-import { updatePowerups, drawPowerups, dropPowerup } from './powerups.js';
-import { createExplosion, updateParticles, drawParticles } from "./particles.js";
+import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE } from './constants.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -19,7 +17,7 @@ let killCount = 0;
 let waveNumber = 1;
 let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
-export let gamePaused = false;
+let gamePaused = false;
 
 function startWave() {
     setInterval(() => {
@@ -83,7 +81,7 @@ export function initializeGame() {
 function updateCamera() {
     const player = getPlayer();
     if (!player) return;
-
+    
     camera.x = Math.max(0, Math.min(player.pos.x - camera.width / 2, GAME_WIDTH - camera.width));
     camera.y = Math.max(0, Math.min(player.pos.y - camera.height / 2, GAME_HEIGHT - camera.height));
 }
@@ -94,10 +92,7 @@ export function gameLoop() {
     handlePlayerMovement();
     updateProjectiles();
     updateEnemies();
-    updateParticles(); // ✨ Update particles
     updateCamera();
-    updatePowerups();
-
     if (enemyInView()) {
         if (!projectileInterval) updateProjectileInterval();
     } else {
@@ -128,62 +123,44 @@ export function gameLoop() {
         }
 
         enemies.forEach((e, enemyIndex) => {
-            // ✅ Player collision with enemy
-            if (!player.invincible && Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
-                
-                console.log(`⚠️ Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
-
-                player.health -= e.damage || 1; // ✅ Use enemy's damage from constants
+            // Check if the player collides with an enemy
+            if (Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
+                player.health -= e.damage || 1; // Use enemy's damage from constants
                 updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
         
-                enemies.splice(enemyIndex, 1); // ✅ Remove enemy on collision
+                enemies.splice(enemyIndex, 1); // Remove enemy on collision
         
                 if (player.health <= 0) {
-
-                    console.log("💀 Player has died!");
-
-                    gameOver = true; 
+                    gameOver = true; // Ensure game state is updated
                     stopGame();
                     return;
                 }
             }
         
-            // ✅ Player projectiles hitting enemies
+            // Handle player projectiles hitting enemies
             for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
                 const p = projectiles[projIndex];
-        
-                if (p.enemyShot) continue; // ✅ Enemy projectiles don't damage enemies
+                
+                // Ensure enemy projectiles don't damage enemies
+                if (p.enemyShot) continue;
         
                 const distance = Math.hypot(p.pos.x - e.pos.x, p.pos.y - e.pos.y);
         
                 if (distance < p.radius + e.radius) {
-
-                   // console.log(`💥 Projectile hit ${e.type} at (${e.pos.x}, ${e.pos.y})`);
-
-                    if (e.shield > 0) {
-                        e.shield--; // ✅ Reduce shield first
-                    } else {
-                        e.health -= p.damage || PROJECTILE.DAMAGE; // ✅ Only reduce health if shield is gone
-                    }
+                    e.health -= p.damage || PROJECTILE.DAMAGE; // Use defined projectile damage
         
-                    projectiles.splice(projIndex, 1); // ✅ Remove projectile
+                    projectiles.splice(projIndex, 1); // Remove projectile
         
                     if (e.health <= 0) {
-                        createExplosion(e.pos.x, e.pos.y); // 🔥 Explosion effect
-
-                       // console.log(`☠️ ${e.type} has been killed at (${e.pos.x}, ${e.pos.y})`);
-
-                    
-                        dropPowerup(e.pos);
                         enemies.splice(enemyIndex, 1);
                         killCount++;
-                        addXP(ENEMY_TYPES[e.type.toUpperCase()].EXP);
+                        addXP(e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1);
                     }
-                    
                     break;
                 }
             }
-        }); 
+        });
+        
     }
 
     draw();
@@ -235,16 +212,7 @@ function draw() {
         ctx.fill();
     }
 
-    if (player.invincible) {
-        ctx.strokeStyle = "cyan";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(player.pos.x - camera.x, player.pos.y - camera.y, player.radius + 10, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-    
     drawProjectiles(ctx, camera);
-    drawParticles(ctx, camera); // 💥 Draw explosion particles
 
     enemies.forEach(e => {
         ctx.fillStyle = e.type === "boss" ? "red" : e.type === "tank" ? "yellow" : e.type === "shooter" ? "pink" : "green";
@@ -253,15 +221,7 @@ function draw() {
         ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
     
-        // ✅ Draw shield as a blue outline if the enemy has a shield
-        if (e.shield > 0) {
-            ctx.strokeStyle = "cyan";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius + 5, 0, Math.PI * 2);
-            ctx.stroke();
-        }
+        //console.log(`Drawing ${e.type} at (${e.pos.x}, ${e.pos.y}) with radius ${e.radius}`);
     });
-
-    drawPowerups(ctx, camera);  
+    
 }
