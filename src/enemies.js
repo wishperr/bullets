@@ -34,9 +34,6 @@ export function spawnEnemy(type = "normal", waveNumber = 1) {
     //console.log(`Spawning ${type} enemy at (${x}, ${y}) with shield: ${enemy.shield}`);
 }
 
-
-
-
 export function spawnWaveEnemies(waveNumber) {
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
 

@@ -4,6 +4,7 @@ import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } fro
 import { updateUI, showGameOver, updateWaveUI } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
 import { updatePowerups, drawPowerups, dropPowerup } from './powerups.js';
+import { createExplosion, updateParticles, drawParticles } from "./particles.js";
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -93,6 +94,7 @@ export function gameLoop() {
     handlePlayerMovement();
     updateProjectiles();
     updateEnemies();
+    updateParticles(); // ✨ Update particles
     updateCamera();
     updatePowerups();
 
@@ -167,6 +169,7 @@ export function gameLoop() {
                     projectiles.splice(projIndex, 1); // ✅ Remove projectile
         
                     if (e.health <= 0) {
+                        createExplosion(e.pos.x, e.pos.y); // 🔥 Explosion effect
 
                        // console.log(`☠️ ${e.type} has been killed at (${e.pos.x}, ${e.pos.y})`);
 
@@ -241,6 +244,7 @@ function draw() {
     }
     
     drawProjectiles(ctx, camera);
+    drawParticles(ctx, camera); // 💥 Draw explosion particles
 
     enemies.forEach(e => {
         ctx.fillStyle = e.type === "boss" ? "red" : e.type === "tank" ? "yellow" : e.type === "shooter" ? "pink" : "green";
