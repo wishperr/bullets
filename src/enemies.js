@@ -31,7 +31,7 @@ export function spawnEnemy(type = "normal", waveNumber = 1) {
     };
 
     enemies.push(enemy);
-    console.log(`Spawning ${type} enemy at (${x}, ${y}) with shield: ${enemy.shield}`);
+    //console.log(`Spawning ${type} enemy at (${x}, ${y}) with shield: ${enemy.shield}`);
 }
 
 

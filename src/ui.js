@@ -7,7 +7,7 @@ export function updateUI() {
     document.getElementById("killCounter").innerText = `Kills: ${player.killCount || 0}`;
     document.getElementById("xpCounter").innerText = `XP: ${player.xp} / ${player.xpToNextLevel}`;
     document.getElementById("levelCounter").innerText = `Level: ${player.level}`;
-    document.getElementById("healthCounter").innerText = `Health: ${player.health}`;
+    document.getElementById("healthCounter").innerText = `Health: ${player.health} ${player.invincible ? "(Invincible)" : ""}`;
     document.getElementById("attackSpeedCounter").innerText = `Attack Speed: ${player.attackSpeed}ms`;
     document.getElementById("movementSpeedCounter").innerText = `Movement Speed: ${player.speed}`;
     document.getElementById("projectileStrengthCounter").innerText = `Projectile Strength: ${player.projectileStrength}`;

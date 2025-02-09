@@ -3,6 +3,7 @@ import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE } from './constants.js';
+import { updatePowerups, drawPowerups, dropPowerup } from './powerups.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -93,6 +94,8 @@ export function gameLoop() {
     updateProjectiles();
     updateEnemies();
     updateCamera();
+    updatePowerups();
+
     if (enemyInView()) {
         if (!projectileInterval) updateProjectileInterval();
     } else {
@@ -124,13 +127,19 @@ export function gameLoop() {
 
         enemies.forEach((e, enemyIndex) => {
             // ✅ Player collision with enemy
-            if (Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
+            if (!player.invincible && Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
+                
+                console.log(`⚠️ Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
+
                 player.health -= e.damage || 1; // ✅ Use enemy's damage from constants
                 updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
         
                 enemies.splice(enemyIndex, 1); // ✅ Remove enemy on collision
         
                 if (player.health <= 0) {
+
+                    console.log("💀 Player has died!");
+
                     gameOver = true; 
                     stopGame();
                     return;
@@ -146,6 +155,9 @@ export function gameLoop() {
                 const distance = Math.hypot(p.pos.x - e.pos.x, p.pos.y - e.pos.y);
         
                 if (distance < p.radius + e.radius) {
+
+                   // console.log(`💥 Projectile hit ${e.type} at (${e.pos.x}, ${e.pos.y})`);
+
                     if (e.shield > 0) {
                         e.shield--; // ✅ Reduce shield first
                     } else {
@@ -155,10 +167,16 @@ export function gameLoop() {
                     projectiles.splice(projIndex, 1); // ✅ Remove projectile
         
                     if (e.health <= 0) {
+
+                       // console.log(`☠️ ${e.type} has been killed at (${e.pos.x}, ${e.pos.y})`);
+
+                    
+                        dropPowerup(e.pos);
                         enemies.splice(enemyIndex, 1);
                         killCount++;
                         addXP(e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1);
                     }
+                    
                     break;
                 }
             }
@@ -234,6 +252,9 @@ function draw() {
             ctx.stroke();
         }
     });
+
+    drawPowerups(ctx, camera);
+
     
     
 }

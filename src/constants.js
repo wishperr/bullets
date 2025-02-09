@@ -49,6 +49,12 @@ export const ENEMY_TYPES = {
     }
 };
 
+export const POWERUP = {
+    DROP_CHANCE: 0.1, // 10% chance to drop a powerup
+    EXTRA_HEALTH_AMOUNT: 5, // Extra health on pickup
+    INVINCIBILITY_DURATION: 5000, // 5 seconds of invincibility
+};
+
 // Projectile Settings
 export const PROJECTILE = {
     SPEED: 5,
@@ -64,7 +70,7 @@ export const WAVE = {
     ENEMY_COUNT_INCREMENT: 2,
     TANK_SPAWN_CHANCE_BASE: 0.2,
     TANK_SPAWN_CHANCE_INCREMENT: 0.02,
-    SHOOTER_SPAWN_CHANCE: 0.4,
+    SHOOTER_SPAWN_CHANCE: 0,
     BOSS_SPAWN_INTERVAL: 5, // Spawn a boss every 5 waves
     SHIELDED_SPAWN_INTERVAL: 1, // Spawn shielded enemies every wave
     SHIELDED_SPAWN_CHANCE: 0.1 // % chance to spawn enemies with shield

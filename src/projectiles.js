@@ -75,7 +75,7 @@ export function updateProjectiles() {
 
         if (p.enemyShot) {
             const dist = Math.hypot(player.pos.x - p.pos.x, player.pos.y - p.pos.y);
-            if (dist < player.radius + p.radius) {
+            if (!player.invincible && dist < player.radius + p.radius) {
                 player.health -= 1;
                 updateUI();
                 projectiles.splice(i, 1);
