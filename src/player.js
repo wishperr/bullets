@@ -17,9 +17,7 @@ export function initializePlayer() {
         projectileStrength: PLAYER.PROJECTILE_STRENGTH,
         additionalProjectiles: PLAYER.ADDITIONAL_PROJECTILES,
         weapon: "shotgun", // Default weapon before upgrading
-        health: PLAYER.HEALTH, // Health System
-        invincible: false // Ensure the player has an invincibility property
-
+        health: PLAYER.HEALTH // Health System
     };
 }
 
