@@ -75,18 +75,22 @@ export function updateProjectiles() {
 
         if (p.enemyShot) {
             const dist = Math.hypot(player.pos.x - p.pos.x, player.pos.y - p.pos.y);
-            if (!player.invincible && dist < player.radius + p.radius) {
-                player.health -= 1;
-                updateUI();
-                projectiles.splice(i, 1);
-
-                if (player.health <= 0) {
-                    stopGame();
-                    return;
+            if (dist < player.radius + p.radius) {
+                if (player.invincible) {
+                    console.log("🛡️ Player is invincible! Projectile did no damage.");
+                } else {
+                    player.health -= 1;
+                    updateUI();
+                    console.log(`⚠️ Player received ${p.damage} damage from a projectile!`);
+                    if (player.health <= 0) {
+                        stopGame();
+                        return;
+                    }
                 }
+                projectiles.splice(i, 1); // Remove projectile after collision
             }
-            continue;
         }
+        
 
         if (p.pos.x < 0 || p.pos.x > GAME_WIDTH || p.pos.y < 0 || p.pos.y > GAME_HEIGHT) {
             projectiles.splice(i, 1);

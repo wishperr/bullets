@@ -70,7 +70,7 @@ export const WAVE = {
     ENEMY_COUNT_INCREMENT: 2,
     TANK_SPAWN_CHANCE_BASE: 0.2,
     TANK_SPAWN_CHANCE_INCREMENT: 0.02,
-    SHOOTER_SPAWN_CHANCE: 0,
+    SHOOTER_SPAWN_CHANCE: 0.3,
     BOSS_SPAWN_INTERVAL: 5, // Spawn a boss every 5 waves
     SHIELDED_SPAWN_INTERVAL: 1, // Spawn shielded enemies every wave
     SHIELDED_SPAWN_CHANCE: 0.1 // % chance to spawn enemies with shield
