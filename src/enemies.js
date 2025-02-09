@@ -5,7 +5,7 @@ import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE, PROJECTILE } from './consta
 export let enemies = [];
 let normalEnemyKillCount = 0;
 
-export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) {
+export function spawnEnemy(type = "normal", waveNumber = 1) {
     const edge = Math.floor(Math.random() * 4);
     let x, y;
     switch (edge) {
@@ -19,7 +19,7 @@ export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) 
 
     let enemy = {
         pos: { x, y },
-        radius: enemyConfig.RADIUS, // ✅ Now correctly setting the radius
+        radius: enemyConfig.RADIUS,
         health: enemyConfig.HEALTH,
         damage: enemyConfig.DAMAGE,
         speed: enemyConfig.SPEED,
@@ -27,13 +27,12 @@ export function spawnEnemy(type = "normal", waveNumber = 1, isShielded = false) 
         shoots: type === "shooter",
         shootCooldown: enemyConfig.SHOOT_COOLDOWN || 0,
         lastShot: Date.now(),
+        shield: Math.random() < WAVE.SHIELDED_SPAWN_CHANCE ? 3 : 0 // X(3) hits for shield
     };
 
     enemies.push(enemy);
-   // console.log(`Spawned ${type} at (${x}, ${y}) with radius ${enemy.radius} and health ${enemy.health}`);
+    //console.log(`Spawning ${type} enemy at (${x}, ${y}) with shield: ${enemy.shield}`);
 }
-
-
 
 export function spawnWaveEnemies(waveNumber) {
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
