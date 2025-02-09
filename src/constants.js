@@ -17,7 +17,7 @@ export const PLAYER = {
     HEALTH: 5,
     ATTACK_SPEED: 500, // Time in milliseconds between attacks
     PROJECTILE_STRENGTH: 1,
-    ADDITIONAL_PROJECTILES: 0 // Default additional projectiles
+    ADDITIONAL_PROJECTILES: 1 // Default additional projectiles
 };
 
 // Enemy Settings
@@ -26,27 +26,37 @@ export const ENEMY_TYPES = {
         SPEED: 2,
         HEALTH: 3,
         DAMAGE: 1,
-        RADIUS: 10
+        RADIUS: 10,
+        EXP: 1
     },
     TANK: {
         SPEED: 1.5,
         HEALTH: 6,
         DAMAGE: 2,
-        RADIUS: 20
+        RADIUS: 20,
+        EXP: 3
     },
     SHOOTER: {
         SPEED: 1.8,
         HEALTH: 4,
         DAMAGE: 1,
         SHOOT_COOLDOWN: 2000, // Time in milliseconds between shots
-        RADIUS: 15
+        RADIUS: 15,
+        EXP: 2
     },
     BOSS: {
         SPEED: 1,
         HEALTH: 15,
         DAMAGE: 3,
-        RADIUS: 40
+        RADIUS: 40,
+        EXP: 10
     }
+};
+
+export const POWERUP = {
+    DROP_CHANCE: 0.1, // 10% chance to drop a powerup
+    EXTRA_HEALTH_AMOUNT: 5, // Extra health on pickup
+    INVINCIBILITY_DURATION: 5000, // 5 seconds of invincibility
 };
 
 // Projectile Settings
@@ -64,10 +74,10 @@ export const WAVE = {
     ENEMY_COUNT_INCREMENT: 2,
     TANK_SPAWN_CHANCE_BASE: 0.2,
     TANK_SPAWN_CHANCE_INCREMENT: 0.02,
-    SHOOTER_SPAWN_CHANCE: 0.4,
+    SHOOTER_SPAWN_CHANCE: 0.1,
     BOSS_SPAWN_INTERVAL: 5, // Spawn a boss every 5 waves
     SHIELDED_SPAWN_INTERVAL: 1, // Spawn shielded enemies every wave
-    SHIELDED_SPAWN_CHANCE: 0.3
+    SHIELDED_SPAWN_CHANCE: 0.1 // % chance to spawn enemies with shield
 };
 
 // Obstacle Settings
