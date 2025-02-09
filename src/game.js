@@ -2,7 +2,7 @@ import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './play
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI } from './ui.js';
-import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE } from './constants.js';
+import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
 import { updatePowerups, drawPowerups, dropPowerup } from './powerups.js';
 
 const canvas = document.getElementById("gameCanvas");
@@ -82,7 +82,7 @@ export function initializeGame() {
 function updateCamera() {
     const player = getPlayer();
     if (!player) return;
-    
+
     camera.x = Math.max(0, Math.min(player.pos.x - camera.width / 2, GAME_WIDTH - camera.width));
     camera.y = Math.max(0, Math.min(player.pos.y - camera.height / 2, GAME_HEIGHT - camera.height));
 }
@@ -174,15 +174,13 @@ export function gameLoop() {
                         dropPowerup(e.pos);
                         enemies.splice(enemyIndex, 1);
                         killCount++;
-                        addXP(e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1);
+                        addXP(ENEMY_TYPES[e.type.toUpperCase()].EXP);
                     }
                     
                     break;
                 }
             }
-        });
-        
-        
+        }); 
     }
 
     draw();
@@ -261,8 +259,5 @@ function draw() {
         }
     });
 
-    drawPowerups(ctx, camera);
-
-    
-    
+    drawPowerups(ctx, camera);  
 }

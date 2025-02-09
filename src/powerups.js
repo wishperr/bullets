@@ -1,6 +1,6 @@
 import { enemies } from "./enemies.js";
 import { getPlayer, addXP } from "./player.js";
-import { CAMERA } from './constants.js';
+import { CAMERA, ENEMY_TYPES } from './constants.js';
 import { gamePaused } from "./game.js";
 import { updateUI } from "./ui.js";
 
@@ -70,26 +70,35 @@ function handlePowerupEffect(type) {
 
 export function killAllEnemiesInView() {
     const player = getPlayer();
-    let totalXP = 0; // Track total XP to grant
+    let totalXP = 0;
 
-    // Filter enemies in the camera view
+    // Find enemies in the camera view
     const enemiesInView = enemies.filter(e => 
-        e.pos.x >= player.pos.x - 500 && e.pos.x <= player.pos.x + 500 &&
-        e.pos.y >= player.pos.y - 400 && e.pos.y <= player.pos.y + 400
+        e.pos.x >= player.pos.x - CAMERA.WIDTH / 2 &&
+        e.pos.x <= player.pos.x + CAMERA.WIDTH / 2 &&
+        e.pos.y >= player.pos.y - CAMERA.HEIGHT / 2 &&
+        e.pos.y <= player.pos.y + CAMERA.HEIGHT / 2
     );
 
+    // Calculate XP for killed enemies
     enemiesInView.forEach(e => {
-        totalXP += (e.type === "boss" ? 10 : e.type === "tank" ? 5 : e.type === "shooter" ? 3 : 1);
+        totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
     });
 
-    // Remove all enemies in view
-    enemies.length = enemies.filter(e => !enemiesInView.includes(e)).length;
+    // Properly remove enemies from the main array
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        if (enemiesInView.includes(enemies[i])) {
+            enemies.splice(i, 1);
+        }
+    }
 
     console.log(`💀 Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
 
     // Add XP after all enemies are removed
     addXP(totalXP);
 }
+
+
 
 export function drawPowerups(ctx, camera) {
     powerups.forEach(p => {
