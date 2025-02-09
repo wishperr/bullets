@@ -26,26 +26,30 @@ export const ENEMY_TYPES = {
         SPEED: 2,
         HEALTH: 3,
         DAMAGE: 1,
-        RADIUS: 10
+        RADIUS: 10,
+        EXP: 1
     },
     TANK: {
         SPEED: 1.5,
         HEALTH: 6,
         DAMAGE: 2,
-        RADIUS: 20
+        RADIUS: 20,
+        EXP: 3
     },
     SHOOTER: {
         SPEED: 1.8,
         HEALTH: 4,
         DAMAGE: 1,
         SHOOT_COOLDOWN: 2000, // Time in milliseconds between shots
-        RADIUS: 15
+        RADIUS: 15,
+        EXP: 2
     },
     BOSS: {
         SPEED: 1,
         HEALTH: 15,
         DAMAGE: 3,
-        RADIUS: 40
+        RADIUS: 40,
+        EXP: 10
     }
 };
 
