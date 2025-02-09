@@ -17,7 +17,7 @@ export const PLAYER = {
     HEALTH: 5,
     ATTACK_SPEED: 500, // Time in milliseconds between attacks
     PROJECTILE_STRENGTH: 1,
-    ADDITIONAL_PROJECTILES: 0 // Default additional projectiles
+    ADDITIONAL_PROJECTILES: 1 // Default additional projectiles
 };
 
 // Enemy Settings
