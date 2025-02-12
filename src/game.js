@@ -6,6 +6,7 @@ import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } f
 import { updatePowerups, drawPowerups, dropPowerup, spinningStar } from './powerups.js';
 import { createExplosion, updateParticles, drawParticles } from "./particles.js";
 import { getDistance } from './utils.js';
+import { UI_ELEMENTS } from './uiConstants.js';  // Add this import
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -20,6 +21,7 @@ let killCount = 0;
 let waveNumber = 1;
 let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
+let nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
 export let gamePaused = false;
 
 function startWave() {
@@ -29,8 +31,17 @@ function startWave() {
             enemySpawnRate = Math.max(500, enemySpawnRate - 200);
             spawnWaveEnemies();
             updateWaveUI(waveNumber);
+            nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
         }
     }, WAVE_SPAWN_RATE);
+
+    // Update wave timer every second
+    setInterval(() => {
+        if (!gameOver && !gamePaused) {
+            const timeRemaining = Math.max(0, Math.ceil((nextWaveTime - Date.now()) / 1000));
+            UI_ELEMENTS.waveTimer.innerText = `Next wave in: ${timeRemaining}s`;
+        }
+    }, 1000);
 }
 
 function spawnWaveEnemies() {

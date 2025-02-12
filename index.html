@@ -9,7 +9,6 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     <div id="ui">
-        <p id="waveCounter">Wave: 1</p>
         <p id="killCounter">Kills: 0</p>
         <p id="xpCounter">XP: 0 / 5</p>
         <p id="levelCounter">Level: 1</p>
@@ -20,7 +19,10 @@
         <p id="healthCounter">Health: 1</p>
         <button id="restartButton" style="display: none;">Restart</button>
     </div>
-    
+    <div id="waveInfo">
+        <p id="waveCounter">Wave: 1</p>
+        <p id="waveTimer">Next wave in: 20s</p>
+    </div>
     
     <script src="main.js" type="module"></script>
 </body>

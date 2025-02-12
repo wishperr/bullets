@@ -8,5 +8,6 @@ export const UI_ELEMENTS = {
     projectileStrengthCounter: document.getElementById("projectileStrengthCounter"),
     additionalProjectilesCounter: document.getElementById("additionalProjectilesCounter"),
     waveCounter: document.getElementById("waveCounter"),
+    waveTimer: document.getElementById("waveTimer"),
     restartButton: document.getElementById("restartButton")
 };
