@@ -7,7 +7,7 @@ export function showBossMessage() {
     const bossMessage = document.createElement("div");
     bossMessage.innerText = "⚠️ The Boss is here!";
     bossMessage.style.position = "absolute";
-    bossMessage.style.top = "50%";
+    bossMessage.style.top = "calc(50% + 75px)"; // Shift message slightly below center
     bossMessage.style.left = "50%";
     bossMessage.style.transform = "translate(-50%, -50%)";
     bossMessage.style.padding = "20px";
@@ -23,7 +23,7 @@ export function showBossMessage() {
 
     setTimeout(() => {
         document.body.removeChild(bossMessage);
-    }, 2000);
+    }, 3000);
 }
 
 export function updateUI() {

@@ -35,7 +35,7 @@ function startWave() {
 function spawnWaveEnemies() {
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
 
-    if (waveNumber === 2) {
+    if (waveNumber === 3) {
         // Only spawn the boss on wave 5
         spawnEnemy("boss");
         showBossMessage(); // Display boss arrival message
