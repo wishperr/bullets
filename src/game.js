@@ -1,10 +1,11 @@
 import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
-import { updateUI, showGameOver, updateWaveUI } from './ui.js';
+import { updateUI, showGameOver, updateWaveUI, showBossMessage } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
-import { updatePowerups, drawPowerups, dropPowerup } from './powerups.js';
+import { updatePowerups, drawPowerups, dropPowerup, spinningStar } from './powerups.js';
 import { createExplosion, updateParticles, drawParticles } from "./particles.js";
+import { getDistance } from './utils.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -35,8 +36,10 @@ function startWave() {
 function spawnWaveEnemies() {
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
 
-    if (waveNumber % WAVE.BOSS_SPAWN_INTERVAL === 0) {
+    if (waveNumber === 3) {
         spawnEnemy("boss");
+        showBossMessage();
+        return;
     }
 
     for (let i = 0; i < enemyCount; i++) {
@@ -113,7 +116,7 @@ export function gameLoop() {
         for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
             const p = projectiles[projIndex];
             if (p.enemyShot) { // Only process enemy projectiles
-                const distance = Math.hypot(p.pos.x - player.pos.x, p.pos.y - player.pos.y);
+                const distance = getDistance(p.pos.x, p.pos.y, player.pos.x);
                 if (distance < p.radius + player.radius) {
                     player.health -= 1;
                     updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
@@ -129,7 +132,7 @@ export function gameLoop() {
 
         enemies.forEach((e, enemyIndex) => {
             // ✅ Player collision with enemy
-            if (!player.invincible && Math.hypot(player.pos.x - e.pos.x, player.pos.y - e.pos.y) < player.radius + e.radius) {
+            if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
                 
                 console.log(`⚠️ Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
 
@@ -154,7 +157,7 @@ export function gameLoop() {
         
                 if (p.enemyShot) continue; // ✅ Enemy projectiles don't damage enemies
         
-                const distance = Math.hypot(p.pos.x - e.pos.x, p.pos.y - e.pos.y);
+                const distance = getDistance(p.pos.x, p.pos.y, e.pos.x, e.pos.y);
         
                 if (distance < p.radius + e.radius) {
 
@@ -163,7 +166,7 @@ export function gameLoop() {
                     if (e.shield > 0) {
                         e.shield--; // ✅ Reduce shield first
                     } else {
-                        e.health -= p.damage || PROJECTILE.DAMAGE; // ✅ Only reduce health if shield is gone
+                        e.health -= p.damage || projectiles.DAMAGE; // ✅ Only reduce health if shield is gone
                     }
         
                     projectiles.splice(projIndex, 1); // ✅ Remove projectile
@@ -244,7 +247,7 @@ function draw() {
     }
     
     drawProjectiles(ctx, camera);
-    drawParticles(ctx, camera); // 💥 Draw explosion particles
+    drawParticles(ctx, camera);
 
     enemies.forEach(e => {
         ctx.fillStyle = e.type === "boss" ? "red" : e.type === "tank" ? "yellow" : e.type === "shooter" ? "pink" : "green";
@@ -253,7 +256,6 @@ function draw() {
         ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
     
-        // ✅ Draw shield as a blue outline if the enemy has a shield
         if (e.shield > 0) {
             ctx.strokeStyle = "cyan";
             ctx.lineWidth = 3;
@@ -263,5 +265,5 @@ function draw() {
         }
     });
 
-    drawPowerups(ctx, camera);  
+    drawPowerups(ctx, camera);
 }

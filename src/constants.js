@@ -14,7 +14,7 @@ export const CAMERA = {
 export const PLAYER = {
     SPEED: 3,
     RADIUS: 10,
-    HEALTH: 5,
+    HEALTH: 50,
     ATTACK_SPEED: 500, // Time in milliseconds between attacks
     PROJECTILE_STRENGTH: 1,
     ADDITIONAL_PROJECTILES: 1 // Default additional projectiles

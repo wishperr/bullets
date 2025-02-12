@@ -1,13 +1,14 @@
 import { getPlayer } from './player.js';
 import { pauseGame, resumeGame } from "./game.js";
 import { UI } from "./constants.js";
+import { UI_ELEMENTS } from "./uiConstants.js";
 
 export function updateUI() {
     const player = getPlayer();
     
-    document.getElementById("killCounter").innerText = `Kills: ${player.killCount || 0}`;
-    document.getElementById("xpCounter").innerText = `XP: ${player.xp} / ${player.xpToNextLevel}`;
-    document.getElementById("levelCounter").innerText = `Level: ${player.level}`;
+    UI_ELEMENTS.killCounter.innerText = `Kills: ${player.killCount || 0}`;
+    UI_ELEMENTS.xpCounter.innerText = `XP: ${player.xp} / ${player.xpToNextLevel}`;
+    UI_ELEMENTS.levelCounter.innerText = `Level: ${player.level}`;
     
     // Properly display remaining invincibility time
     let invincibilityText = "";
@@ -16,13 +17,12 @@ export function updateUI() {
         invincibilityText = ` (Invincible ${remainingSeconds})`;
     }
 
-    document.getElementById("healthCounter").innerText = `Health: ${player.health}${invincibilityText}`;
-    document.getElementById("attackSpeedCounter").innerText = `Attack Speed: ${player.attackSpeed}ms`;
-    document.getElementById("movementSpeedCounter").innerText = `Movement Speed: ${player.speed}`;
-    document.getElementById("projectileStrengthCounter").innerText = `Projectile Strength: ${player.projectileStrength}`;
-    document.getElementById("additionalProjectilesCounter").innerText = `Additional Projectiles: ${player.additionalProjectiles}`;
+    UI_ELEMENTS.healthCounter.innerText = `Health: ${player.health}${invincibilityText}`;
+    UI_ELEMENTS.attackSpeedCounter.innerText = `Attack Speed: ${player.attackSpeed}ms`;
+    UI_ELEMENTS.movementSpeedCounter.innerText = `Movement Speed: ${player.speed}`;
+    UI_ELEMENTS.projectileStrengthCounter.innerText = `Projectile Strength: ${player.projectileStrength}`;
+    UI_ELEMENTS.additionalProjectilesCounter.innerText = `Additional Projectiles: ${player.additionalProjectiles}`;
 }
-
 
 export function showUpgradeOptions() {
     const player = getPlayer();
@@ -30,16 +30,7 @@ export function showUpgradeOptions() {
 
     const upgradeContainer = document.createElement("div");
     upgradeContainer.id = "upgradeContainer";
-    upgradeContainer.style.position = "absolute";
-    upgradeContainer.style.top = "50%";
-    upgradeContainer.style.left = "50%";
-    upgradeContainer.style.transform = "translate(-50%, -50%)";
-    upgradeContainer.style.padding = "20px";
-    upgradeContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-    upgradeContainer.style.color = "white";
-    upgradeContainer.style.fontSize = "20px";
-    upgradeContainer.style.border = "2px solid white";
-    upgradeContainer.style.textAlign = "center";
+    upgradeContainer.classList.add("upgrade-container");
 
     const title = document.createElement("p");
     title.innerText = "Choose an Upgrade!";
@@ -51,7 +42,6 @@ export function showUpgradeOptions() {
         { text: "💥 Damage", effect: () => { player.projectileStrength++; } },
         { text: "🎯 Additional Projectile", effect: () => { player.additionalProjectiles++; } },
         { text: "❤️ Increase Health", effect: () => { getPlayer().health += 1; } } // ✅ Added Health Upgrade Option
-
     ];
 
     const shuffledUpgrades = upgradeOptions.sort(() => Math.random() - 0.5).slice(0, 4);
@@ -72,22 +62,26 @@ export function showUpgradeOptions() {
 }
 
 export function showGameOver() {
-    const restartButton = document.getElementById("restartButton");
-    restartButton.style.display = "block";
-    restartButton.onclick = () => location.reload();
+    UI_ELEMENTS.restartButton.style.display = "block";
+    UI_ELEMENTS.restartButton.onclick = () => location.reload();
 
     const gameOverText = document.createElement("div");
     gameOverText.innerText = "Game Over";
-    gameOverText.style.position = "absolute";
-    gameOverText.style.top = "40%";
-    gameOverText.style.left = "50%";
-    gameOverText.style.transform = "translate(-50%, -50%)";
-    gameOverText.style.fontSize = "40px";
-    gameOverText.style.color = "red";
-    gameOverText.style.fontWeight = "bold";
+    gameOverText.classList.add("game-over-text");
     document.body.appendChild(gameOverText);
 }
 
 export function updateWaveUI(waveNumber) {
-    document.getElementById("waveCounter").innerText = `Wave: ${waveNumber}`;
+    UI_ELEMENTS.waveCounter.innerText = `Wave: ${waveNumber}`;
+}
+
+export function showBossMessage() {
+    const bossMessage = document.createElement('div');
+    bossMessage.innerText = 'Boss Incoming!';
+    bossMessage.classList.add("boss-message");
+    document.body.appendChild(bossMessage);
+
+    setTimeout(() => {
+        document.body.removeChild(bossMessage);
+    }, 3000); // Remove message after 3 seconds
 }
