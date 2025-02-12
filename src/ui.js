@@ -2,6 +2,30 @@ import { getPlayer } from './player.js';
 import { pauseGame, resumeGame } from "./game.js";
 import { UI } from "./constants.js";
 
+
+export function showBossMessage() {
+    const bossMessage = document.createElement("div");
+    bossMessage.innerText = "⚠️ The Boss is here!";
+    bossMessage.style.position = "absolute";
+    bossMessage.style.top = "calc(50% + 75px)"; // Shift message slightly below center
+    bossMessage.style.left = "50%";
+    bossMessage.style.transform = "translate(-50%, -50%)";
+    bossMessage.style.padding = "20px";
+    bossMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    bossMessage.style.color = "red";
+    bossMessage.style.fontSize = "24px";
+    bossMessage.style.fontWeight = "bold";
+    bossMessage.style.border = "2px solid white";
+    bossMessage.style.textAlign = "center";
+    bossMessage.style.zIndex = "1000";
+
+    document.body.appendChild(bossMessage);
+
+    setTimeout(() => {
+        document.body.removeChild(bossMessage);
+    }, 3000);
+}
+
 export function updateUI() {
     const player = getPlayer();
     

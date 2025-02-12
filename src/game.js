@@ -1,7 +1,7 @@
 import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
-import { updateUI, showGameOver, updateWaveUI } from './ui.js';
+import { updateUI, showGameOver, updateWaveUI, showBossMessage } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
 import { updatePowerups, drawPowerups, dropPowerup } from './powerups.js';
 import { createExplosion, updateParticles, drawParticles } from "./particles.js";
@@ -35,8 +35,11 @@ function startWave() {
 function spawnWaveEnemies() {
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
 
-    if (waveNumber % WAVE.BOSS_SPAWN_INTERVAL === 0) {
+    if (waveNumber === 3) {
+        // Only spawn the boss on wave 5
         spawnEnemy("boss");
+        showBossMessage(); // Display boss arrival message
+        return;
     }
 
     for (let i = 0; i < enemyCount; i++) {
