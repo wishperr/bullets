@@ -8,6 +8,7 @@ import { createExplosion, updateParticles, drawParticles } from "./particles.js"
 import { getDistance } from './utils.js';
 import { UI_ELEMENTS } from './uiConstants.js';  // Add this import
 
+// Game canvas setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -16,8 +17,9 @@ canvas.height = CAMERA.HEIGHT;
 
 const camera = { x: 0, y: 0, width: CAMERA.WIDTH, height: CAMERA.HEIGHT };
 
+// Game state
 let gameOver = false;
-let killCount = 0;
+export let killCount = 0;  // Make killCount accessible to other modules
 let waveNumber = 1;
 let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
@@ -108,7 +110,7 @@ export function gameLoop() {
     handlePlayerMovement();
     updateProjectiles();
     updateEnemies();
-    updateParticles(); // ✨ Update particles
+    updateParticles();
     updateCamera();
     updatePowerups();
 
@@ -126,14 +128,14 @@ export function gameLoop() {
         // Handle shooter enemy projectiles hitting the player
         for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
             const p = projectiles[projIndex];
-            if (p.enemyShot) { // Only process enemy projectiles
+            if (p.enemyShot) {
                 const distance = getDistance(p.pos.x, p.pos.y, player.pos.x);
                 if (distance < p.radius + player.radius) {
                     player.health -= 1;
                     updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
-                    projectiles.splice(projIndex, 1); // Remove projectile
+                    projectiles.splice(projIndex, 1);
                     if (player.health <= 0) {
-                        gameOver = true; // Ensure game state is updated
+                        gameOver = true;
                         stopGame();
                         return;
                     }
@@ -142,58 +144,43 @@ export function gameLoop() {
         }
 
         enemies.forEach((e, enemyIndex) => {
-            // ✅ Player collision with enemy
+            // Handle player collision with enemy
             if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
-                
-                console.log(`⚠️ Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
-
-                player.health -= e.damage || 1; // ✅ Use enemy's damage from constants
+                console.log(`Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
+                player.health -= e.damage || 1;
                 updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
-        
-                enemies.splice(enemyIndex, 1); // ✅ Remove enemy on collision
+                enemies.splice(enemyIndex, 1);
         
                 if (player.health <= 0) {
-
-                    console.log("💀 Player has died!");
-
+                    console.log("Player has died!");
                     gameOver = true; 
                     stopGame();
                     return;
                 }
             }
         
-            // ✅ Player projectiles hitting enemies
+            // Handle player projectiles hitting enemies
             for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
                 const p = projectiles[projIndex];
-        
-                if (p.enemyShot) continue; // ✅ Enemy projectiles don't damage enemies
-        
+                if (p.enemyShot) continue;
                 const distance = getDistance(p.pos.x, p.pos.y, e.pos.x, e.pos.y);
         
                 if (distance < p.radius + e.radius) {
-
-                   // console.log(`💥 Projectile hit ${e.type} at (${e.pos.x}, ${e.pos.y})`);
-
                     if (e.shield > 0) {
-                        e.shield--; // ✅ Reduce shield first
+                        e.shield--;
                     } else {
-                        e.health -= p.damage || projectiles.DAMAGE; // ✅ Only reduce health if shield is gone
+                        e.health -= p.damage || projectiles.DAMAGE;
                     }
         
-                    projectiles.splice(projIndex, 1); // ✅ Remove projectile
+                    projectiles.splice(projIndex, 1);
         
                     if (e.health <= 0) {
-                        createExplosion(e.pos.x, e.pos.y); // 🔥 Explosion effect
-
-                       // console.log(`☠️ ${e.type} has been killed at (${e.pos.x}, ${e.pos.y})`);
-
-                    
+                        createExplosion(e.pos.x, e.pos.y);
                         dropPowerup(e.pos);
                         enemies.splice(enemyIndex, 1);
                         killCount++;
                         addXP(ENEMY_TYPES[e.type.toUpperCase()].EXP);
                     }
-                    
                     break;
                 }
             }

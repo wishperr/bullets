@@ -5,6 +5,7 @@ import { gamePaused } from "./game.js";
 import { updateUI } from "./ui.js";
 import { getDistance } from './utils.js';
 
+// Game state and configuration
 export let powerups = [];
 let spinningStarActive = false;
 export let spinningStar = null;
@@ -16,7 +17,7 @@ const STAR_CONFIG = {
     ORBIT_SPEED: 0.1,      // How fast it circles the player
     SPIN_SPEED: 0.3,       // How fast it spins
     ORBIT_RADIUS: 150,     // Distance from player
-    DAMAGE: 2,            // Damage per hit
+    DAMAGE: 2,             // Damage per hit
 };
 
 export function dropPowerup(pos) {
@@ -69,14 +70,14 @@ function handlePowerupEffect(type) {
                 }
 
                 player.invincibleRemaining -= 1000;
-                updateUI(); // Update UI countdown
+                updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health); // Pass required parameters
 
                 if (player.invincibleRemaining > 0) {
                     setTimeout(countdownInvincibility, 1000);
                 } else {
                     player.invincible = false;
                     console.log("Invincibility wore off.");
-                    updateUI();
+                    updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health); // Pass required parameters
                 }
             }
 
@@ -109,7 +110,7 @@ function updateSpinningStar() {
     
     // Update spinning star position and spin
     spinningStar.angle += STAR_CONFIG.ORBIT_SPEED;
-    spinningStar.spinAngle += STAR_CONFIG.SPIN_SPEED; // Spin faster than the circular motion
+    spinningStar.spinAngle += STAR_CONFIG.SPIN_SPEED;
     spinningStar.pos.x = player.pos.x + Math.cos(spinningStar.angle) * spinningStar.radius;
     spinningStar.pos.y = player.pos.y + Math.sin(spinningStar.angle) * spinningStar.radius;
 
@@ -117,19 +118,19 @@ function updateSpinningStar() {
     enemies.forEach((enemy, index) => {
         if (getDistance(spinningStar.pos.x, spinningStar.pos.y, enemy.pos.x, enemy.pos.y) < 20 + enemy.radius) {
             enemy.health -= STAR_CONFIG.DAMAGE;
-            console.log(`⭐ Spinning Star hit ${enemy.type} enemy! Enemy health: ${enemy.health}`);
+            console.log(`Spinning Star hit ${enemy.type} enemy! Enemy health: ${enemy.health}`);
             if (enemy.health <= 0) {
-                console.log(`💫 Spinning Star killed ${enemy.type} enemy!`);
+                console.log(`Spinning Star killed ${enemy.type} enemy!`);
                 enemies.splice(index, 1);
                 addXP(ENEMY_TYPES[enemy.type.toUpperCase()].EXP);
             }
         }
     });
 
-    // Check for duration
-    spinningStar.duration -= 16; // Smaller time increment for smoother animation
+    // Check duration and cleanup
+    spinningStar.duration -= 16;
     if (spinningStar.duration <= 0) {
-        console.log('⭐ Spinning Star power-up expired');
+        console.log('Spinning Star power-up expired');
         spinningStarActive = false;
         spinningStar = null;
     }
@@ -147,21 +148,19 @@ export function killAllEnemiesInView() {
         e.pos.y <= player.pos.y + CAMERA.HEIGHT / 2
     );
 
-    // Calculate XP for killed enemies
+    // Calculate and award XP
     enemiesInView.forEach(e => {
         totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
     });
 
-    // Properly remove enemies from the main array
+    // Remove enemies
     for (let i = enemies.length - 1; i >= 0; i--) {
         if (enemiesInView.includes(enemies[i])) {
             enemies.splice(i, 1);
         }
     }
 
-    console.log(`💀 Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
-
-    // Add XP after all enemies are removed
+    console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
     addXP(totalXP);
 }
 

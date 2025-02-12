@@ -45,9 +45,9 @@ export const ENEMY_TYPES = {
         EXP: 2
     },
     BOSS: {
-        SPEED: 1,
-        HEALTH: 15,
-        DAMAGE: 3,
+        SPEED: 2,
+        HEALTH: 200,
+        DAMAGE: 30,
         RADIUS: 40,
         EXP: 10
     }

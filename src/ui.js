@@ -1,33 +1,37 @@
+// UI-related imports
 import { getPlayer } from './player.js';
 import { pauseGame, resumeGame } from "./game.js";
 import { UI } from "./constants.js";
 import { UI_ELEMENTS } from "./uiConstants.js";
 
-export function updateUI() {
+export function updateUI(killCount, xp, level, xpToNextLevel, health) {
     const player = getPlayer();
     
-    UI_ELEMENTS.killCounter.innerText = `Kills: ${player.killCount || 0}`;
-    UI_ELEMENTS.xpCounter.innerText = `XP: ${player.xp} / ${player.xpToNextLevel}`;
-    UI_ELEMENTS.levelCounter.innerText = `Level: ${player.level}`;
+    // Update status counters with kill count passed as parameter
+    UI_ELEMENTS.killCounter.innerText = `💀 Kills: ${killCount}`;
+    UI_ELEMENTS.xpCounter.innerText = `⭐ XP: ${player.xp} / ${player.xpToNextLevel}`;
+    UI_ELEMENTS.levelCounter.innerText = `📈 Level: ${player.level}`;
     
-    // Properly display remaining invincibility time
+    // Handle invincibility status display
     let invincibilityText = "";
     if (player.invincible) {
         let remainingSeconds = Math.ceil(player.invincibleRemaining / 1000);
         invincibilityText = ` (Invincible ${remainingSeconds})`;
     }
 
-    UI_ELEMENTS.healthCounter.innerText = `Health: ${player.health}${invincibilityText}`;
-    UI_ELEMENTS.attackSpeedCounter.innerText = `Attack Speed: ${player.attackSpeed}ms`;
-    UI_ELEMENTS.movementSpeedCounter.innerText = `Movement Speed: ${player.speed}`;
-    UI_ELEMENTS.projectileStrengthCounter.innerText = `Projectile Strength: ${player.projectileStrength}`;
-    UI_ELEMENTS.additionalProjectilesCounter.innerText = `Additional Projectiles: ${player.additionalProjectiles}`;
+    // Update player stats with icons
+    UI_ELEMENTS.healthCounter.innerText = `❤️ Health: ${player.health}${invincibilityText}`;
+    UI_ELEMENTS.attackSpeedCounter.innerText = `⚡ Attack Speed: ${player.attackSpeed}ms`;
+    UI_ELEMENTS.movementSpeedCounter.innerText = `🏃 Movement Speed: ${player.speed}`;
+    UI_ELEMENTS.projectileStrengthCounter.innerText = `💥 Projectile Strength: ${player.projectileStrength}`;
+    UI_ELEMENTS.additionalProjectilesCounter.innerText = `🎯 Additional Projectiles: ${player.additionalProjectiles}`;
 }
 
 export function showUpgradeOptions() {
     const player = getPlayer();
     pauseGame();
 
+    // Create upgrade container
     const upgradeContainer = document.createElement("div");
     upgradeContainer.id = "upgradeContainer";
     upgradeContainer.classList.add("upgrade-container");
@@ -36,14 +40,16 @@ export function showUpgradeOptions() {
     title.innerText = "Choose an Upgrade!";
     upgradeContainer.appendChild(title);
 
+    // Define available upgrades with matching icons
     const upgradeOptions = [
-        { text: "🔥 Attack Speed", effect: () => { player.attackSpeed = Math.max(200, player.attackSpeed - 100); } },
-        { text: "⚡ Move Speed", effect: () => { player.speed += 0.5; } },
+        { text: "⚡ Attack Speed", effect: () => { player.attackSpeed = Math.max(200, player.attackSpeed - 100); } },
+        { text: "🏃 Move Speed", effect: () => { player.speed += 0.5; } },
         { text: "💥 Damage", effect: () => { player.projectileStrength++; } },
         { text: "🎯 Additional Projectile", effect: () => { player.additionalProjectiles++; } },
-        { text: "❤️ Increase Health", effect: () => { getPlayer().health += 1; } } // ✅ Added Health Upgrade Option
+        { text: "❤️ Increase Health", effect: () => { getPlayer().health += 1; } }
     ];
 
+    // Randomly select and display upgrades
     const shuffledUpgrades = upgradeOptions.sort(() => Math.random() - 0.5).slice(0, 4);
 
     shuffledUpgrades.forEach(upgrade => {
@@ -61,6 +67,7 @@ export function showUpgradeOptions() {
     document.body.appendChild(upgradeContainer);
 }
 
+// Game state UI updates
 export function showGameOver() {
     UI_ELEMENTS.restartButton.style.display = "block";
     UI_ELEMENTS.restartButton.onclick = () => location.reload();
@@ -81,7 +88,8 @@ export function showBossMessage() {
     bossMessage.classList.add("boss-message");
     document.body.appendChild(bossMessage);
 
+    // Remove message after delay
     setTimeout(() => {
         document.body.removeChild(bossMessage);
-    }, 3000); // Remove message after 3 seconds
+    }, 3000);
 }

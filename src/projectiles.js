@@ -79,7 +79,7 @@ export function updateProjectiles() {
                     console.log("🛡️ Player is invincible! Projectile did no damage.");
                 } else {
                     player.health -= 1;
-                    updateUI();
+                    updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health);
                     console.log(`⚠️ Player received ${p.damage} damage from a projectile!`);
                     if (player.health <= 0) {
                         stopGame();
