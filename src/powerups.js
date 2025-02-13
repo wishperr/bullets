@@ -4,7 +4,7 @@ import { CAMERA, ENEMY_TYPES } from './constants.js';
 import { gamePaused } from "./game.js";
 import { updateUI } from "./ui.js";
 import { getDistance } from './utils.js';
-import { createShockwave } from './particles.js';
+import { createShockwave, createExplosion } from './particles.js';
 
 // Game state and configuration
 export let powerups = [];
@@ -156,6 +156,7 @@ export function killAllEnemiesInView() {
     setTimeout(() => {
         // Calculate and award XP
         enemiesInView.forEach(e => {
+            createExplosion(e.pos.x, e.pos.y, "yellow", 15, true); // Create colorful explosion for each enemy
             totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
         });
 
