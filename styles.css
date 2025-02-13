@@ -97,3 +97,89 @@ canvas {
 #waveInfo p {
     margin: 5px 0;
 }
+
+/* Weapon UI */
+#weapons-ui {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weapon-icon {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid white;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.weapon-icon.active {
+    border-color: yellow;
+    background-color: rgba(50, 50, 50, 0.9);
+}
+
+/* Intro Screen */
+#intro-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    border: 2px solid white;
+    text-align: center;
+    max-width: 500px;
+}
+
+#intro-screen h1 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+#intro-screen .controls {
+    text-align: left;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+#intro-screen .controls p {
+    margin: 10px 0;
+}
+
+#intro-screen .key {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid white;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+
+#start-button {
+    font-size: 20px;
+    padding: 10px 30px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#start-button:hover {
+    background-color: #45a049;
+}
