@@ -4,6 +4,7 @@ import { CAMERA, ENEMY_TYPES } from './constants.js';
 import { gamePaused } from "./game.js";
 import { updateUI } from "./ui.js";
 import { getDistance } from './utils.js';
+import { createShockwave } from './particles.js';
 
 // Game state and configuration
 export let powerups = [];
@@ -140,6 +141,9 @@ export function killAllEnemiesInView() {
     const player = getPlayer();
     let totalXP = 0;
 
+    // Create shockwave effect before removing enemies
+    createShockwave(player.pos.x, player.pos.y);
+
     // Find enemies in the camera view
     const enemiesInView = enemies.filter(e => 
         e.pos.x >= player.pos.x - CAMERA.WIDTH / 2 &&
@@ -148,20 +152,23 @@ export function killAllEnemiesInView() {
         e.pos.y <= player.pos.y + CAMERA.HEIGHT / 2
     );
 
-    // Calculate and award XP
-    enemiesInView.forEach(e => {
-        totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
-    });
+    // Add small delay to remove enemies so shockwave is visible
+    setTimeout(() => {
+        // Calculate and award XP
+        enemiesInView.forEach(e => {
+            totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
+        });
 
-    // Remove enemies
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        if (enemiesInView.includes(enemies[i])) {
-            enemies.splice(i, 1);
+        // Remove enemies
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            if (enemiesInView.includes(enemies[i])) {
+                enemies.splice(i, 1);
+            }
         }
-    }
 
-    console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
-    addXP(totalXP);
+        console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
+        addXP(totalXP);
+    }, 100); // Small delay to match shockwave animation
 }
 
 export function drawPowerups(ctx, camera) {
