@@ -9,5 +9,14 @@ export const UI_ELEMENTS = {
     additionalProjectilesCounter: document.getElementById("additionalProjectilesCounter"),
     waveCounter: document.getElementById("waveCounter"),
     waveTimer: document.getElementById("waveTimer"),
-    restartButton: document.getElementById("restartButton")
+    restartButton: document.getElementById("restartButton"),
+    // Stats menu elements
+    statsMenu: document.getElementById("stats-menu"),
+    availablePoints: document.getElementById("available-points"),
+    currentAttackSpeed: document.getElementById("current-attack-speed"),
+    currentHealth: document.getElementById("current-health"),
+    currentDamage: document.getElementById("current-damage"),
+    currentProjectiles: document.getElementById("current-projectiles"),
+    closeStats: document.getElementById("close-stats"),
+    statButtons: document.querySelectorAll(".stat-button")
 };

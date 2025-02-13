@@ -13,6 +13,7 @@
             <h2>Controls</h2>
             <p>Movement: <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span></p>
             <p>Switch Weapons: <span class="key">Q</span> previous, <span class="key">E</span> next</p>
+            <p>Stats menu: <span class="key">C</span>
             <p>Available Weapons:</p>
             <ul>
                 <li>Shotgun - Spread shot</li>
@@ -43,6 +44,36 @@
         <div class="weapon-icon active" data-weapon="shotgun">Shotgun</div>
         <div class="weapon-icon" data-weapon="laser">Laser</div>
         <div class="weapon-icon" data-weapon="rockets">Rockets</div>
+    </div>
+    
+    <div id="stats-menu">
+        <button id="close-stats">×</button>
+        <h2>Character Stats</h2>
+        <div class="stat-points">Available Points: <span id="available-points">0</span></div>
+        
+        <div class="stat-row">
+            <span class="stat-label">⚡ Attack Speed</span>
+            <span class="stat-value" id="current-attack-speed">2000ms</span>
+            <button class="stat-button" data-stat="attackSpeed">Upgrade</button>
+        </div>
+        
+        <div class="stat-row">
+            <span class="stat-label">❤️ Health</span>
+            <span class="stat-value" id="current-health">1</span>
+            <button class="stat-button" data-stat="health">Upgrade</button>
+        </div>
+        
+        <div class="stat-row">
+            <span class="stat-label">💥 Damage</span>
+            <span class="stat-value" id="current-damage">1</span>
+            <button class="stat-button" data-stat="damage">Upgrade</button>
+        </div>
+        
+        <div class="stat-row">
+            <span class="stat-label">🎯 Additional Projectiles</span>
+            <span class="stat-value" id="current-projectiles">0</span>
+            <button class="stat-button" data-stat="additionalProjectiles">Upgrade</button>
+        </div>
     </div>
     
     <script src="main.js" type="module"></script>
