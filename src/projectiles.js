@@ -3,6 +3,7 @@ import { enemies } from './enemies.js';
 import { stopGame } from './game.js';
 import { PROJECTILE, GAME_WIDTH, GAME_HEIGHT } from './constants.js';
 import { updateUI } from './ui.js';
+import { getDistance } from './utils.js';
 
 export let projectiles = [];
 
@@ -42,7 +43,7 @@ export function shootProjectiles() {
         if (closestEnemy) {
             const dx = closestEnemy.pos.x - player.pos.x;
             const dy = closestEnemy.pos.y - player.pos.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = getDistance(player.pos.x, player.pos.y, closestEnemy.pos.x, closestEnemy.pos.y);
             velocity = { x: (dx / distance) * PROJECTILE.SPEED, y: (dy / distance) * PROJECTILE.SPEED };
         }
 
@@ -59,9 +60,7 @@ export function shootProjectiles() {
 function findClosestEnemy(player) {
     if (enemies.length === 0) return null;
     return enemies.reduce((closest, enemy) => {
-        const dx = enemy.pos.x - player.pos.x;
-        const dy = enemy.pos.y - player.pos.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const distance = getDistance(player.pos.x, player.pos.y, enemy.pos.x, enemy.pos.y);
         return distance < (closest?.distance || Infinity) ? { enemy, distance } : closest;
     }, null)?.enemy;
 }
@@ -74,13 +73,13 @@ export function updateProjectiles() {
         p.pos.y += p.vel.y;
 
         if (p.enemyShot) {
-            const dist = Math.hypot(player.pos.x - p.pos.x, player.pos.y - p.pos.y);
+            const dist = getDistance(p.pos.x, p.pos.y, player.pos.x, player.pos.y);
             if (dist < player.radius + p.radius) {
                 if (player.invincible) {
                     console.log("🛡️ Player is invincible! Projectile did no damage.");
                 } else {
                     player.health -= 1;
-                    updateUI();
+                    updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health);
                     console.log(`⚠️ Player received ${p.damage} damage from a projectile!`);
                     if (player.health <= 0) {
                         stopGame();

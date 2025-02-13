@@ -1,8 +1,8 @@
 import { GAME_WIDTH, GAME_HEIGHT, PLAYER } from './constants.js';
 import { showUpgradeOptions } from './ui.js';
+import { getDistance } from './utils.js';
 
 let player;
-
 const keys = { w: false, a: false, s: false, d: false };
 
 export function initializePlayer() {
@@ -16,10 +16,9 @@ export function initializePlayer() {
         attackSpeed: PLAYER.ATTACK_SPEED,
         projectileStrength: PLAYER.PROJECTILE_STRENGTH,
         additionalProjectiles: PLAYER.ADDITIONAL_PROJECTILES,
-        weapon: "shotgun", // Default weapon before upgrading
-        health: PLAYER.HEALTH, // Health System
-        invincible: false // Ensure the player has an invincibility property
-
+        weapon: "shotgun",
+        health: PLAYER.HEALTH,
+        invincible: false
     };
 }
 

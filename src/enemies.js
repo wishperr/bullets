@@ -1,20 +1,13 @@
 import { getPlayer, addXP } from './player.js';
 import { projectiles } from './projectiles.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE, PROJECTILE } from './constants.js';
+import { getRandomEdgePosition, getDistance } from './utils.js';
 
 export let enemies = [];
 let normalEnemyKillCount = 0;
 
 export function spawnEnemy(type = "normal", waveNumber = 1) {
-    const edge = Math.floor(Math.random() * 4);
-    let x, y;
-    switch (edge) {
-        case 0: x = Math.random() * GAME_WIDTH; y = 0; break;
-        case 1: x = Math.random() * GAME_WIDTH; y = GAME_HEIGHT; break;
-        case 2: x = 0; y = Math.random() * GAME_HEIGHT; break;
-        case 3: x = GAME_WIDTH; y = Math.random() * GAME_HEIGHT; break;
-    }
-
+    const { x, y } = getRandomEdgePosition(GAME_WIDTH, GAME_HEIGHT);
     let enemyConfig = ENEMY_TYPES[type.toUpperCase()] || ENEMY_TYPES.NORMAL;
 
     let enemy = {
@@ -31,7 +24,6 @@ export function spawnEnemy(type = "normal", waveNumber = 1) {
     };
 
     enemies.push(enemy);
-    //console.log(`Spawning ${type} enemy at (${x}, ${y}) with shield: ${enemy.shield}`);
 }
 
 export function spawnWaveEnemies(waveNumber) {
@@ -65,7 +57,7 @@ export function updateEnemies() {
     enemies.forEach(e => {
         const dx = player.pos.x - e.pos.x;
         const dy = player.pos.y - e.pos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const dist = getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y);
 
         if (e.type === "shooter" && dist > 150) {
             e.pos.x += (dx / dist) * e.speed;
