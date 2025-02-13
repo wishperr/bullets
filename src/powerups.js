@@ -141,8 +141,16 @@ export function killAllEnemiesInView() {
     const player = getPlayer();
     let totalXP = 0;
 
-    // Create shockwave effect before removing enemies
-    createShockwave(player.pos.x, player.pos.y);
+    // Create single killAll shockwave effect
+    createShockwave(player.pos.x, player.pos.y, {
+        isKillAll: true,
+        maxRadius: CAMERA.WIDTH / 2,
+        speed: 20,
+        lineWidth: 8,
+        color: "rgba(255, 255, 0, 0.9)",
+        duration: 30,
+        startOpacity: 1
+    });
 
     // Find enemies in the camera view
     const enemiesInView = enemies.filter(e => 
@@ -156,7 +164,7 @@ export function killAllEnemiesInView() {
     setTimeout(() => {
         // Calculate and award XP
         enemiesInView.forEach(e => {
-            createExplosion(e.pos.x, e.pos.y, "yellow", 15, true); // Create colorful explosion for each enemy
+            createExplosion(e.pos.x, e.pos.y, "yellow", 15, true);
             totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
         });
 
@@ -169,7 +177,7 @@ export function killAllEnemiesInView() {
 
         console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
         addXP(totalXP);
-    }, 100); // Small delay to match shockwave animation
+    }, 100);
 }
 
 export function drawPowerups(ctx, camera) {

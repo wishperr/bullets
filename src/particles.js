@@ -1,4 +1,5 @@
 import { getPlayer } from './player.js';
+import { CAMERA, ENEMY_TYPES } from './constants.js';
 
 export let particles = [];
 export let shockwaves = [];
@@ -54,13 +55,32 @@ export function createExplosion(x, y, color = "orange", particleCount = 10, isSh
 }
 
 export function createShockwave(x, y, config) {
+    console.log('Creating shockwave at', x, y, 'with config', config); // Add logging
+    // Special handling for killAll powerup shockwave
+    if (config.isKillAll) {
+        shockwaves.push({
+            pos: { x, y },
+            radius: 0,
+            maxRadius: CAMERA.WIDTH / 2, // Grow to the full width of the camera view
+            speed: 3, // Slower speed for more visibility
+            lineWidth: 20, // Thicker line for better visibility
+            opacity: 1,
+            color: "rgb(255, 255, 0)", // Use full opacity
+            duration: 250, // Longer duration for more visibility
+            gradient: false,
+            isKillAll: true
+        });
+        return;
+    }
+
+    // Regular shockwave (for rockets, etc)
     shockwaves.push({
         pos: { x, y },
         radius: 0,
         maxRadius: config.maxRadius || 1200,
         speed: config.speed || 15,
         lineWidth: config.lineWidth || 3,
-        opacity: config.startOpacity || 1, // Use provided opacity or default to 1
+        opacity: config.startOpacity || 1,
         color: config.color || 'rgba(255, 140, 0, 0.4)',
         duration: config.duration || 20,
         gradient: true
@@ -148,14 +168,22 @@ export function drawParticles(ctx, camera) {
 
     // Draw enhanced shockwaves
     shockwaves.forEach(sw => {
+        console.log('Drawing shockwave at', sw.pos.x, sw.pos.y, 'with radius', sw.radius); // Add logging
         ctx.save();
         if (sw.gradient) {
             const gradient = ctx.createRadialGradient(
-                sw.pos.x - camera.x, sw.pos.y - camera.y, sw.radius * 0.8, // Inner radius
-                sw.pos.x - camera.x, sw.pos.y - camera.y, sw.radius        // Outer radius
+                sw.pos.x - camera.x, sw.pos.y - camera.y, sw.radius * (sw.isKillAll ? 0.5 : 0.8), // Different inner radius for killAll
+                sw.pos.x - camera.x, sw.pos.y - camera.y, sw.radius
             );
-            gradient.addColorStop(0, sw.color);
-            gradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
+            
+            if (sw.isKillAll) {
+                gradient.addColorStop(0, 'rgba(255, 255, 0, 1)');   // Bright yellow core
+                gradient.addColorStop(0.6, 'rgba(255, 200, 0, 0.8)'); // Orange-yellow middle
+                gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');     // Fade to transparent
+            } else {
+                gradient.addColorStop(0, sw.color);
+                gradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
+            }
             ctx.strokeStyle = gradient;
         } else {
             ctx.strokeStyle = sw.color;
