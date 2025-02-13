@@ -205,12 +205,16 @@ export function stopGame() {
 export function pauseGame() {
     gamePaused = true;
     pauseStartTime = Date.now();
+    if (projectileInterval) {
+        clearInterval(projectileInterval);
+        projectileInterval = null;
+    }
 }
 
 export function resumeGame() {
     if (gamePaused) {
         const pauseDuration = Date.now() - pauseStartTime;
-        nextWaveTime += pauseDuration; // Extend the next wave time by the pause duration
+        nextWaveTime += pauseDuration;
         gamePaused = false;
         updateProjectileInterval();
         gameLoop();

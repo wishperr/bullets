@@ -2,7 +2,7 @@ import { GAME_WIDTH, GAME_HEIGHT, PLAYER } from './constants.js';
 import { getDistance } from './utils.js';
 import { showStatsMenu } from './statsMenu.js';
 
-const weapons = ["shotgun", "laser", "rockets"];
+const weapons = ["shotgun", "laser", "rockets", "chainLightning"];
 let currentWeaponIndex = 0;
 
 let player;
