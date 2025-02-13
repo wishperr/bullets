@@ -77,9 +77,7 @@ window.addEventListener("keydown", (e) => {
     } else if (e.key === 'e') {
         switchWeapon(1);
     } else if (e.key.toLowerCase() === 'c') {
-        if (player.statPoints > 0) {
-            showStatsMenu();
-        }
+        showStatsMenu();
     }
 });
 
