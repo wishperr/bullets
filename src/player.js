@@ -2,6 +2,9 @@ import { GAME_WIDTH, GAME_HEIGHT, PLAYER } from './constants.js';
 import { showUpgradeOptions } from './ui.js';
 import { getDistance } from './utils.js';
 
+const weapons = ["shotgun", "laser", "rockets"];
+let currentWeaponIndex = 0;
+
 let player;
 const keys = { w: false, a: false, s: false, d: false };
 
@@ -16,7 +19,7 @@ export function initializePlayer() {
         attackSpeed: PLAYER.ATTACK_SPEED,
         projectileStrength: PLAYER.PROJECTILE_STRENGTH,
         additionalProjectiles: PLAYER.ADDITIONAL_PROJECTILES,
-        weapon: "shotgun",
+        weapon: weapons[currentWeaponIndex],
         health: PLAYER.HEALTH,
         invincible: false
     };
@@ -47,9 +50,34 @@ export function handlePlayerMovement() {
     if (keys.d && player.pos.x < GAME_WIDTH - player.radius * 2) player.pos.x += player.speed;
 }
 
+export function switchWeapon(direction) {
+    // direction: 1 for next, -1 for previous
+    currentWeaponIndex = (currentWeaponIndex + direction + weapons.length) % weapons.length;
+    player.weapon = weapons[currentWeaponIndex];
+    updateWeaponUI();
+}
+
+function updateWeaponUI() {
+    // Update weapon icons
+    document.querySelectorAll('.weapon-icon').forEach(icon => {
+        if (icon.dataset.weapon === player.weapon) {
+            icon.classList.add('active');
+        } else {
+            icon.classList.remove('active');
+        }
+    });
+}
+
 window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() in keys) {
         keys[e.key.toLowerCase()] = true;
+    }
+    
+    // Weapon switching
+    if (e.key === 'q') {
+        switchWeapon(-1); // Previous weapon
+    } else if (e.key === 'e') {
+        switchWeapon(1);  // Next weapon
     }
 });
 

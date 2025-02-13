@@ -65,7 +65,15 @@ export const PROJECTILE = {
     RADIUS: 5,
     ENEMY_SPEED: 3,
     ENEMY_RADIUS: 5,
-    DAMAGE: 1
+    DAMAGE: 1,
+    LASER_DAMAGE_MULTIPLIER: 0.1,  // Laser deals 10% of normal damage
+    ROCKET: {
+        SPEED: 4,                  // Slightly slower than normal projectiles
+        BASE_EXPLOSION_RADIUS: 50,  // Base explosion radius
+        RADIUS_PER_UPGRADE: 20,    // Additional radius per projectile upgrade
+        SPLASH_DAMAGE_MULTIPLIER: 0.5, // Splash damage multiplier
+        DAMAGE_PER_UPGRADE: 0.5    // Damage increase per projectile strength upgrade
+    }
 };
 
 // Wave Settings

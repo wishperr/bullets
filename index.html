@@ -7,6 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="intro-screen">
+        <h1>Bullet Survivors</h1>
+        <div class="controls">
+            <h2>Controls</h2>
+            <p>Movement: <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span></p>
+            <p>Switch Weapons: <span class="key">Q</span> previous, <span class="key">E</span> next</p>
+            <p>Available Weapons:</p>
+            <ul>
+                <li>Shotgun - Spread shot</li>
+                <li>Laser - Pierce through enemies</li>
+                <li>Rockets - Coming soon!</li>
+            </ul>
+        </div>
+        <button id="start-button">Start Game</button>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
     <div id="ui">
         <p id="killCounter">Kills: 0</p>
@@ -22,6 +38,11 @@
     <div id="waveInfo">
         <p id="waveCounter">Wave: 1</p>
         <p id="waveTimer">Next wave in: 20s</p>
+    </div>
+    <div id="weapons-ui">
+        <div class="weapon-icon active" data-weapon="shotgun">Shotgun</div>
+        <div class="weapon-icon" data-weapon="laser">Laser</div>
+        <div class="weapon-icon" data-weapon="rockets">Rockets</div>
     </div>
     
     <script src="main.js" type="module"></script>
