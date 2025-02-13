@@ -17,6 +17,7 @@ export const UI_ELEMENTS = {
     currentHealth: document.getElementById("current-health"),
     currentDamage: document.getElementById("current-damage"),
     currentProjectiles: document.getElementById("current-projectiles"),
+    currentMoveSpeed: document.getElementById("current-move-speed"),
     closeStats: document.getElementById("close-stats"),
     statButtons: document.querySelectorAll(".stat-button")
 };

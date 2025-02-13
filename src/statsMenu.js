@@ -8,6 +8,7 @@ function updateStatDisplay(player) {
     UI_ELEMENTS.currentHealth.textContent = player.health;
     UI_ELEMENTS.currentDamage.textContent = player.projectileStrength;
     UI_ELEMENTS.currentProjectiles.textContent = player.additionalProjectiles;
+    UI_ELEMENTS.currentMoveSpeed.textContent = player.speed.toFixed(1);
 }
 
 function handleStatUpgrade(stat, player) {
@@ -25,6 +26,9 @@ function handleStatUpgrade(stat, player) {
             break;
         case 'additionalProjectiles':
             player.additionalProjectiles++;
+            break;
+        case 'moveSpeed':
+            player.speed += 0.5;
             break;
         default:
             return false;
