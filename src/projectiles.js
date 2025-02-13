@@ -292,9 +292,9 @@ export function updateProjectiles() {
                 enemy.health -= laser.damage;
                 laser.hitEnemies.add(enemy); // Mark this enemy as hit by this beam
                 
-                console.log(`Laser hit enemy (${enemy.type}), damage: ${laser.damage}, enemy health: ${enemy.health}`);
+                // console.log(`Laser hit enemy (${enemy.type}), damage: ${laser.damage}, enemy health: ${enemy.health}`);
                 if (enemy.health <= 0) {
-                    console.log(`Laser killed enemy (${enemy.type})`);
+                    // console.log(`Laser killed enemy (${enemy.type})`);
                     enemies.splice(index, 1);
                     // Add XP and create particle effect when enemy dies
                     addXP(ENEMY_TYPES[enemy.type.toUpperCase()].EXP);

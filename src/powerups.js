@@ -26,7 +26,7 @@ export function dropPowerup(pos) {
         const types = ["killAll", "extraHealth", "invincible", "spinningStar"];
         const type = types[Math.floor(Math.random() * types.length)];
         powerups.push({ pos, type });
-        console.log(`Powerup dropped: ${type} at (${pos.x}, ${pos.y})`);
+        // console.log(`Powerup dropped: ${type} at (${pos.x}, ${pos.y})`);
     }
 }
 
@@ -35,7 +35,7 @@ export function updatePowerups() {
     powerups = powerups.filter(powerup => {
         if (getDistance(player.pos.x, player.pos.y, powerup.pos.x, powerup.pos.y) < player.radius + 10) {
             handlePowerupEffect(powerup.type);
-            console.log(`Player picked up powerup: ${powerup.type}`);
+            // console.log(`Player picked up powerup: ${powerup.type}`);
             return false; // Remove powerup after pickup
         }
         return true;
@@ -55,12 +55,12 @@ function handlePowerupEffect(type) {
             break;
         case "extraHealth":
             player.health += 5;
-            console.log("Player gained 5 extra health!");
+            // console.log("Player gained 5 extra health!");
             break;
         case "invincible":
             player.invincible = true;
             player.invincibleRemaining = 5000; // Store remaining time
-            console.log("Player is now invincible for 5 seconds!");
+            // console.log("Player is now invincible for 5 seconds!");
 
             function countdownInvincibility() {
                 if (!player.invincible) return; // If it was removed, stop the countdown
@@ -77,7 +77,7 @@ function handlePowerupEffect(type) {
                     setTimeout(countdownInvincibility, 1000);
                 } else {
                     player.invincible = false;
-                    console.log("Invincibility wore off.");
+                    // console.log("Invincibility wore off.");
                     updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health); // Pass required parameters
                 }
             }
@@ -119,9 +119,9 @@ function updateSpinningStar() {
     enemies.forEach((enemy, index) => {
         if (getDistance(spinningStar.pos.x, spinningStar.pos.y, enemy.pos.x, enemy.pos.y) < 20 + enemy.radius) {
             enemy.health -= STAR_CONFIG.DAMAGE;
-            console.log(`Spinning Star hit ${enemy.type} enemy! Enemy health: ${enemy.health}`);
+            //console.log(`Spinning Star hit ${enemy.type} enemy! Enemy health: ${enemy.health}`);
             if (enemy.health <= 0) {
-                console.log(`Spinning Star killed ${enemy.type} enemy!`);
+                //console.log(`Spinning Star killed ${enemy.type} enemy!`);
                 enemies.splice(index, 1);
                 addXP(ENEMY_TYPES[enemy.type.toUpperCase()].EXP);
             }
@@ -175,7 +175,7 @@ export function killAllEnemiesInView() {
             }
         }
 
-        console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
+        ///console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
         addXP(totalXP);
     }, 100);
 }

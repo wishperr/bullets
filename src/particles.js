@@ -55,7 +55,7 @@ export function createExplosion(x, y, color = "orange", particleCount = 10, isSh
 }
 
 export function createShockwave(x, y, config) {
-    console.log('Creating shockwave at', x, y, 'with config', config); // Add logging
+    // console.log('Creating shockwave at', x, y, 'with config', config); // Add logging
     // Special handling for killAll powerup shockwave
     if (config.isKillAll) {
         shockwaves.push({
@@ -168,7 +168,7 @@ export function drawParticles(ctx, camera) {
 
     // Draw enhanced shockwaves
     shockwaves.forEach(sw => {
-        console.log('Drawing shockwave at', sw.pos.x, sw.pos.y, 'with radius', sw.radius); // Add logging
+        // console.log('Drawing shockwave at', sw.pos.x, sw.pos.y, 'with radius', sw.radius); // Add logging
         ctx.save();
         if (sw.gradient) {
             const gradient = ctx.createRadialGradient(

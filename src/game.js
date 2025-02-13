@@ -146,13 +146,13 @@ export function gameLoop() {
         enemies.forEach((e, enemyIndex) => {
             // Handle player collision with enemy
             if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
-                console.log(`Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
+                // console.log(`Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
                 player.health -= e.damage || 1;
                 updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
                 enemies.splice(enemyIndex, 1);
         
                 if (player.health <= 0) {
-                    console.log("Player has died!");
+                    // console.log("Player has died!");
                     gameOver = true; 
                     stopGame();
                     return;
