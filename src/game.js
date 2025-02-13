@@ -23,19 +23,24 @@ export let killCount = 0;  // Make killCount accessible to other modules
 let waveNumber = 1;
 let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
-let nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
+let nextWaveTime;
 export let gamePaused = false;
+let pauseStartTime = 0;  // Track when the game was paused
 
 function startWave() {
+    nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
+
     setInterval(() => {
         if (!gameOver && !gamePaused) {
-            waveNumber++;
-            enemySpawnRate = Math.max(500, enemySpawnRate - 200);
-            spawnWaveEnemies();
-            updateWaveUI(waveNumber);
-            nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
+            if (Date.now() >= nextWaveTime) {
+                waveNumber++;
+                enemySpawnRate = Math.max(500, enemySpawnRate - 200);
+                spawnWaveEnemies();
+                updateWaveUI(waveNumber);
+                nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
+            }
         }
-    }, WAVE_SPAWN_RATE);
+    }, 1000);
 
     // Update wave timer every second
     setInterval(() => {
@@ -199,12 +204,17 @@ export function stopGame() {
 
 export function pauseGame() {
     gamePaused = true;
+    pauseStartTime = Date.now();
 }
 
 export function resumeGame() {
-    gamePaused = false;
-    updateProjectileInterval();
-    gameLoop();
+    if (gamePaused) {
+        const pauseDuration = Date.now() - pauseStartTime;
+        nextWaveTime += pauseDuration; // Extend the next wave time by the pause duration
+        gamePaused = false;
+        updateProjectileInterval();
+        gameLoop();
+    }
 }
 
 function drawGrid() {

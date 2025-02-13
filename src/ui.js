@@ -10,7 +10,7 @@ export function updateUI(killCount, xp, level, xpToNextLevel, health) {
     // Update status counters with kill count passed as parameter
     UI_ELEMENTS.killCounter.innerText = `💀 Kills: ${killCount}`;
     UI_ELEMENTS.xpCounter.innerText = `⭐ XP: ${player.xp} / ${player.xpToNextLevel}`;
-    UI_ELEMENTS.levelCounter.innerText = `📈 Level: ${player.level}`;
+    UI_ELEMENTS.levelCounter.innerText = `📈 Level: ${player.level}${player.statPoints > 0 ? ` (Press C: ${player.statPoints} points available)` : ''}`;
     
     // Handle invincibility status display
     let invincibilityText = "";
