@@ -4,7 +4,7 @@ import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE, PROJECTILE } from './consta
 import { getRandomEdgePosition, getDistance } from './utils.js';
 import { updateBoss } from './weapons/systems/bossSystem.js';
 
-export let enemies = [];
+export const enemies = [];
 let normalEnemyKillCount = 0;
 
 export function spawnEnemy(type = "normal", waveNumber = 1, hasShield = false, spawnPos = null) {
@@ -35,37 +35,6 @@ export function spawnEnemy(type = "normal", waveNumber = 1, hasShield = false, s
 
     enemies.push(enemy);
     return enemy;
-}
-
-export function spawnWaveEnemies(waveNumber) {
-    // Don't spawn new enemies if there's a boss fight
-    const bossAlive = enemies.some(e => e.type === "boss");
-    if (bossAlive) return;
-
-    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
-
-    if (waveNumber % WAVE.BOSS_SPAWN_INTERVAL === 0) {
-        // Clear existing enemies before spawning boss
-        enemies.length = 0;
-        spawnEnemy("BOSS");
-        return;
-    }
-
-    for (let i = 0; i < enemyCount; i++) {
-        let type = "NORMAL";
-
-        if (Math.random() < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
-            type = "TANK";
-        }
-
-        if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
-            spawnEnemy(type, waveNumber, true);
-        } else if (waveNumber % WAVE.SHIELDED_SPAWN_INTERVAL === 0 && Math.random() < WAVE.SHOOTER_SPAWN_CHANCE) {
-            spawnEnemy("SHOOTER", waveNumber);
-        } else {
-            spawnEnemy(type);
-        }
-    }
 }
 
 function avoidOverlap(enemy, otherEnemies) {

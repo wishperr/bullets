@@ -1,10 +1,11 @@
-import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './player.js';
+import { initializePlayer, getPlayer, handlePlayerMovement } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI, showBossMessage } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
-import { updatePowerups, drawPowerups, dropPowerup, spinningStar } from './powerups.js';
-import { createExplosion, updateParticles, drawParticles } from "./particles.js";
+import { updatePowerups, drawPowerups } from './powerups.js';
+import { updateParticles, drawParticles } from "./particles.js";
+import { handleCollisions } from './systems/collisionSystem.js';
 import { getDistance } from './utils.js';
 import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
@@ -121,7 +122,7 @@ function updateCamera() {
 export function gameLoop() {
     if (gameOver || gamePaused) return;
 
-    handlePlayerMovement();
+    handlePlayerMovement(); // This is imported from player.js
     updateProjectiles();
     updateEnemies();
     updateParticles();
@@ -130,86 +131,23 @@ export function gameLoop() {
 
     if (enemyInView()) {
         if (!projectileInterval) updateProjectileInterval();
-    } else {
-        if (projectileInterval) {
-            clearInterval(projectileInterval);
-            projectileInterval = null;
-        }
+    } else if (projectileInterval) {
+        clearInterval(projectileInterval);
+        projectileInterval = null;
     }
 
-    const player = getPlayer();
-    if (player) {
-        // Handle shooter enemy projectiles hitting the player
-        for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
-            const p = projectiles[projIndex];
-            if (p.enemyShot) {
-                const distance = getDistance(p.pos.x, p.pos.y, player.pos.x);
-                if (distance < p.radius + player.radius) {
-                    player.health -= 1;
-                    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
-                    projectiles.splice(projIndex, 1);
-                    if (player.health <= 0) {
-                        gameOver = true;
-                        stopGame();
-                        return;
-                    }
-                }
-            }
-        }
-
-        enemies.forEach((e, enemyIndex) => {
-            // Handle player collision with enemy
-            if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
-                player.health -= e.damage || 1;
-                updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
-                
-                if (e.type !== "boss") {
-                    enemies.splice(enemyIndex, 1);
-                }
-        
-                if (player.health <= 0) {
-                    gameOver = true; 
-                    stopGame();
-                    return;
-                }
-            }
-        
-            // Handle player projectiles hitting enemies
-            for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
-                const p = projectiles[projIndex];
-                if (p.enemyShot) continue;
-                const distance = getDistance(p.pos.x, p.pos.y, e.pos.x, e.pos.y);
-        
-                if (distance < p.radius + e.radius) {
-                    if (e.type === "boss" && e.isInvulnerable) {
-                        // Boss is invulnerable, just remove the projectile
-                        projectiles.splice(projIndex, 1);
-                        continue;
-                    }
-
-                    if (e.shield > 0) {
-                        e.shield--;
-                    } else {
-                        e.health -= p.damage || projectiles.DAMAGE;
-                    }
-        
-                    projectiles.splice(projIndex, 1);
-        
-                    if (e.health <= 0) {
-                        handleEnemyDeath(e);
-                        if (e.type !== "boss" || e.currentPhase === 4) {
-                            enemies.splice(enemyIndex, 1);
-                        }
-                        break;
-                    }
-                    break;
-                }
-            }
-        }); 
+    // Use the centralized collision system
+    if (handleCollisions()) {
+        gameOver = true;
+        stopGame();
+        return;
     }
 
     draw();
-    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
+    const player = getPlayer();
+    if (player) {
+        updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -237,12 +175,7 @@ export function resumeGame() {
     }
 }
 
-export function startGame() {
-    resetKillCount(); // Reset kill counter when game starts
-    gameStarted = true;
-    lastTime = Date.now();
-    requestAnimationFrame(gameLoop);
-}
+// Removed unused startGame() function here
 
 function drawGrid() {
     ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
