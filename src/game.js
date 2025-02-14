@@ -32,7 +32,10 @@ function startWave() {
 
     setInterval(() => {
         if (!gameOver && !gamePaused) {
-            if (Date.now() >= nextWaveTime) {
+            // Check if there's a boss alive
+            const bossAlive = enemies.some(e => e.type === "boss");
+            
+            if (Date.now() >= nextWaveTime && !bossAlive) {
                 waveNumber++;
                 enemySpawnRate = Math.max(500, enemySpawnRate - 200);
                 spawnWaveEnemies();
@@ -45,20 +48,26 @@ function startWave() {
     // Update wave timer every second
     setInterval(() => {
         if (!gameOver && !gamePaused) {
-            const timeRemaining = Math.max(0, Math.ceil((nextWaveTime - Date.now()) / 1000));
-            UI_ELEMENTS.waveTimer.innerText = `Next wave in: ${timeRemaining}s`;
+            const bossAlive = enemies.some(e => e.type === "boss");
+            if (bossAlive) {
+                UI_ELEMENTS.waveTimer.innerText = "Defeat the boss!";
+            } else {
+                const timeRemaining = Math.max(0, Math.ceil((nextWaveTime - Date.now()) / 1000));
+                UI_ELEMENTS.waveTimer.innerText = `Next wave in: ${timeRemaining}s`;
+            }
         }
     }, 1000);
 }
 
 function spawnWaveEnemies() {
-    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
-
     if (waveNumber === 3) {
+        // Spawn boss without clearing existing enemies
         spawnEnemy("boss");
         showBossMessage();
         return;
     }
+
+    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
 
     for (let i = 0; i < enemyCount; i++) {
         let type = "normal";
@@ -153,7 +162,10 @@ export function gameLoop() {
             if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
                 player.health -= e.damage || 1;
                 updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
-                enemies.splice(enemyIndex, 1);
+                
+                if (e.type !== "boss") {
+                    enemies.splice(enemyIndex, 1);
+                }
         
                 if (player.health <= 0) {
                     gameOver = true; 
@@ -169,6 +181,12 @@ export function gameLoop() {
                 const distance = getDistance(p.pos.x, p.pos.y, e.pos.x, e.pos.y);
         
                 if (distance < p.radius + e.radius) {
+                    if (e.type === "boss" && e.isInvulnerable) {
+                        // Boss is invulnerable, just remove the projectile
+                        projectiles.splice(projIndex, 1);
+                        continue;
+                    }
+
                     if (e.shield > 0) {
                         e.shield--;
                     } else {
@@ -178,8 +196,10 @@ export function gameLoop() {
                     projectiles.splice(projIndex, 1);
         
                     if (e.health <= 0) {
-                        handleEnemyDeath(e);  // This will handle explosion, powerup drop, and kill counting
-                        enemies.splice(enemyIndex, 1);
+                        handleEnemyDeath(e);
+                        if (e.type !== "boss" || e.currentPhase === 4) {
+                            enemies.splice(enemyIndex, 1);
+                        }
                         break;
                     }
                     break;
@@ -265,12 +285,52 @@ function draw() {
     drawParticles(ctx, camera);
 
     enemies.forEach(e => {
-        ctx.fillStyle = e.type === "boss" ? "red" : e.type === "tank" ? "yellow" : e.type === "shooter" ? "pink" : "green";
-    
+        ctx.fillStyle = e.type === "boss" ? 
+            (e.isInvulnerable ? "rgba(255, 0, 0, 0.5)" : "red") : 
+            e.type === "tank" ? "yellow" : 
+            e.type === "shooter" ? "pink" : "green";
+
         ctx.beginPath();
         ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
-    
+
+        // Add boss health bar and percentage
+        if (e.type === "boss") {
+            const healthBarWidth = 200;
+            const healthBarHeight = 10;
+            const healthPercentage = e.health / ENEMY_TYPES.BOSS.HEALTH;
+            
+            // Health bar background
+            ctx.fillStyle = "black";
+            ctx.fillRect(
+                e.pos.x - camera.x - healthBarWidth/2,
+                e.pos.y - camera.y - e.radius - 20,
+                healthBarWidth,
+                healthBarHeight
+            );
+            
+            // Health bar fill
+            ctx.fillStyle = healthPercentage > 0.5 ? "green" : 
+                          healthPercentage > 0.25 ? "yellow" : "red";
+            ctx.fillRect(
+                e.pos.x - camera.x - healthBarWidth/2,
+                e.pos.y - camera.y - e.radius - 20,
+                healthBarWidth * healthPercentage,
+                healthBarHeight
+            );
+
+            // Add health percentage text
+            ctx.fillStyle = "white";
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(
+                Math.round(healthPercentage * 100) + "%",
+                e.pos.x - camera.x,
+                e.pos.y - camera.y
+            );
+        }
+
         if (e.shield > 0) {
             ctx.strokeStyle = "cyan";
             ctx.lineWidth = 3;
