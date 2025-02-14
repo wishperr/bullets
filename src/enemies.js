@@ -68,6 +68,30 @@ export function spawnWaveEnemies(waveNumber) {
     }
 }
 
+function avoidOverlap(enemy, otherEnemies) {
+    const SEPARATION_FORCE = 0.5;
+    let dx = 0;
+    let dy = 0;
+
+    otherEnemies.forEach(other => {
+        if (other === enemy) return;
+        
+        const dist = getDistance(enemy.pos.x, enemy.pos.y, other.pos.x, other.pos.y);
+        const minDist = enemy.radius + other.radius;
+        
+        if (dist < minDist) {
+            const angle = Math.atan2(enemy.pos.y - other.pos.y, enemy.pos.x - other.pos.x);
+            const pushX = Math.cos(angle) * (minDist - dist) * SEPARATION_FORCE;
+            const pushY = Math.sin(angle) * (minDist - dist) * SEPARATION_FORCE;
+            
+            dx += pushX;
+            dy += pushY;
+        }
+    });
+
+    return { dx, dy };
+}
+
 export function updateEnemies() {
     const player = getPlayer();
     if (!player) return;
@@ -75,40 +99,50 @@ export function updateEnemies() {
     enemies.forEach(e => {
         if (e.type === "boss") {
             updateBoss(e);
-        } else if (e.type === "shooter") {
-            const dx = player.pos.x - e.pos.x;
-            const dy = player.pos.y - e.pos.y;
-            const dist = getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y);
-
-            if (dist > 150) {
-                e.pos.x += (dx / dist) * e.speed;
-                e.pos.y += (dy / dist) * e.speed;
-
-                if (!e.lastShot) e.lastShot = Date.now();
-                if (Date.now() - e.lastShot > e.shootCooldown) {
-                    let angle = Math.atan2(dy, dx);
-                    projectiles.push({
-                        pos: { x: e.pos.x, y: e.pos.y },
-                        vel: { x: Math.cos(angle) * PROJECTILE.ENEMY_SPEED, y: Math.sin(angle) * PROJECTILE.ENEMY_SPEED },
-                        radius: PROJECTILE.ENEMY_RADIUS,
-                        damage: ENEMY_TYPES.SHOOTER.DAMAGE,
-                        enemyShot: true,
-                        color: "cyan"
-                    });
-                    e.lastShot = Date.now();
-                }
-            }
         } else {
             const dx = player.pos.x - e.pos.x;
             const dy = player.pos.y - e.pos.y;
             const dist = getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y);
 
-            e.pos.x += (dx / dist) * e.speed;
-            e.pos.y += (dy / dist) * e.speed;
+            // Get separation forces
+            const separation = avoidOverlap(e, enemies);
+            
+            if (e.type === "shooter") {
+                if (dist > 150) {
+                    // Apply movement with separation
+                    e.pos.x += ((dx / dist) * e.speed) + separation.dx;
+                    e.pos.y += ((dy / dist) * e.speed) + separation.dy;
+
+                    // Handle shooting logic
+                    if (!e.lastShot) e.lastShot = Date.now();
+                    if (Date.now() - e.lastShot > e.shootCooldown) {
+                        let angle = Math.atan2(dy, dx);
+                        projectiles.push({
+                            pos: { x: e.pos.x, y: e.pos.y },
+                            vel: { 
+                                x: Math.cos(angle) * PROJECTILE.ENEMY_SPEED,
+                                y: Math.sin(angle) * PROJECTILE.ENEMY_SPEED 
+                            },
+                            radius: PROJECTILE.ENEMY_RADIUS,
+                            damage: ENEMY_TYPES.SHOOTER.DAMAGE,
+                            enemyShot: true,
+                            color: "cyan"
+                        });
+                        e.lastShot = Date.now();
+                    }
+                } else {
+                    // Apply only separation when not moving towards player
+                    e.pos.x += separation.dx;
+                    e.pos.y += separation.dy;
+                }
+            } else {
+                // Normal and tank enemies - apply movement with separation
+                e.pos.x += ((dx / dist) * e.speed) + separation.dx;
+                e.pos.y += ((dy / dist) * e.speed) + separation.dy;
+            }
         }
     });
 }
-
 
 // Getters and counters for normal enemy kills
 export function getNormalEnemyKillCount() {
