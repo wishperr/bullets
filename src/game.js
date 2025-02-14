@@ -6,7 +6,8 @@ import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } f
 import { updatePowerups, drawPowerups, dropPowerup, spinningStar } from './powerups.js';
 import { createExplosion, updateParticles, drawParticles } from "./particles.js";
 import { getDistance } from './utils.js';
-import { UI_ELEMENTS } from './uiConstants.js';  // Add this import
+import { UI_ELEMENTS } from './uiConstants.js';
+import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -19,7 +20,6 @@ const camera = { x: 0, y: 0, width: CAMERA.WIDTH, height: CAMERA.HEIGHT };
 
 // Game state
 let gameOver = false;
-export let killCount = 0;  // Make killCount accessible to other modules
 let waveNumber = 1;
 let enemySpawnRate = WAVE_SPAWN_RATE;
 let projectileInterval;
@@ -137,7 +137,7 @@ export function gameLoop() {
                 const distance = getDistance(p.pos.x, p.pos.y, player.pos.x);
                 if (distance < p.radius + player.radius) {
                     player.health -= 1;
-                    updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
+                    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
                     projectiles.splice(projIndex, 1);
                     if (player.health <= 0) {
                         gameOver = true;
@@ -151,13 +151,11 @@ export function gameLoop() {
         enemies.forEach((e, enemyIndex) => {
             // Handle player collision with enemy
             if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
-                // console.log(`Player received ${e.damage || 1} damage from ${e.type} at (${e.pos.x}, ${e.pos.y})`);
                 player.health -= e.damage || 1;
-                updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
+                updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
                 enemies.splice(enemyIndex, 1);
         
                 if (player.health <= 0) {
-                    // console.log("Player has died!");
                     gameOver = true; 
                     stopGame();
                     return;
@@ -180,11 +178,9 @@ export function gameLoop() {
                     projectiles.splice(projIndex, 1);
         
                     if (e.health <= 0) {
-                        createExplosion(e.pos.x, e.pos.y);
-                        dropPowerup(e.pos);
+                        handleEnemyDeath(e);  // This will handle explosion, powerup drop, and kill counting
                         enemies.splice(enemyIndex, 1);
-                        killCount++;
-                        addXP(ENEMY_TYPES[e.type.toUpperCase()].EXP);
+                        break;
                     }
                     break;
                 }
@@ -193,7 +189,7 @@ export function gameLoop() {
     }
 
     draw();
-    updateUI(killCount, player.xp, player.level, player.xpToNextLevel, player.health);
+    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
     requestAnimationFrame(gameLoop);
 }
 
@@ -219,6 +215,13 @@ export function resumeGame() {
         updateProjectileInterval();
         gameLoop();
     }
+}
+
+export function startGame() {
+    resetKillCount(); // Reset kill counter when game starts
+    gameStarted = true;
+    lastTime = Date.now();
+    requestAnimationFrame(gameLoop);
 }
 
 function drawGrid() {

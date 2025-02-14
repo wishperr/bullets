@@ -7,24 +7,28 @@ import { UI_ELEMENTS } from "./uiConstants.js";
 export function updateUI(killCount, xp, level, xpToNextLevel, health) {
     const player = getPlayer();
     
-    // Update status counters with kill count passed as parameter
-    UI_ELEMENTS.killCounter.innerText = `💀 Kills: ${killCount}`;
-    UI_ELEMENTS.xpCounter.innerText = `⭐ XP: ${player.xp} / ${player.xpToNextLevel}`;
-    UI_ELEMENTS.levelCounter.innerText = `📈 Level: ${player.level}${player.statPoints > 0 ? ` (Press C: ${player.statPoints} points available)` : ''}`;
-    
-    // Handle invincibility status display
-    let invincibilityText = "";
-    if (player.invincible) {
-        let remainingSeconds = Math.ceil(player.invincibleRemaining / 1000);
-        invincibilityText = ` (Invincible ${remainingSeconds})`;
+    // Update kill counter even if other stats are null
+    if (killCount !== null) {
+        UI_ELEMENTS.killCounter.innerText = `💀 Kills: ${killCount}`;
     }
-
-    // Update player stats with icons
-    UI_ELEMENTS.healthCounter.innerText = `❤️ Health: ${player.health}${invincibilityText}`;
-    UI_ELEMENTS.attackSpeedCounter.innerText = `⚡ Attack Speed: ${player.attackSpeed}ms`;
-    UI_ELEMENTS.movementSpeedCounter.innerText = `🏃 Movement Speed: ${player.speed}`;
-    UI_ELEMENTS.projectileStrengthCounter.innerText = `💥 Projectile Strength: ${player.projectileStrength}`;
-    UI_ELEMENTS.additionalProjectilesCounter.innerText = `🎯 Additional Projectiles: ${player.additionalProjectiles}`;
+    
+    // Update other stats only if they're provided
+    if (player) {
+        UI_ELEMENTS.xpCounter.innerText = `⭐ XP: ${player.xp} / ${player.xpToNextLevel}`;
+        UI_ELEMENTS.levelCounter.innerText = `📈 Level: ${player.level}${player.statPoints > 0 ? ` (Press C: ${player.statPoints} points available)` : ''}`;
+        
+        let invincibilityText = "";
+        if (player.invincible) {
+            let remainingSeconds = Math.ceil(player.invincibleRemaining / 1000);
+            invincibilityText = ` (Invincible ${remainingSeconds})`;
+        }
+        
+        UI_ELEMENTS.healthCounter.innerText = `❤️ Health: ${player.health}${invincibilityText}`;
+        UI_ELEMENTS.attackSpeedCounter.innerText = `⚡ Attack Speed: ${player.attackSpeed}ms`;
+        UI_ELEMENTS.movementSpeedCounter.innerText = `🏃 Movement Speed: ${player.speed}`;
+        UI_ELEMENTS.projectileStrengthCounter.innerText = `💥 Projectile Strength: ${player.projectileStrength}`;
+        UI_ELEMENTS.additionalProjectilesCounter.innerText = `🎯 Additional Projectiles: ${player.additionalProjectiles}`;
+    }
 }
 
 export function showUpgradeOptions() {

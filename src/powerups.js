@@ -1,10 +1,11 @@
 import { enemies } from "./enemies.js";
 import { getPlayer, addXP } from "./player.js";
-import { CAMERA, ENEMY_TYPES } from './constants.js';
+import { CAMERA, ENEMY_TYPES, POWERUP } from './constants.js';
 import { gamePaused } from "./game.js";
 import { updateUI } from "./ui.js";
 import { getDistance } from './utils.js';
 import { createShockwave, createExplosion } from './particles.js';
+import { handleEnemyDeath } from './weapons/common/enemyUtils.js';
 
 // Game state and configuration
 export let powerups = [];
@@ -49,39 +50,32 @@ export function updatePowerups() {
 
 function handlePowerupEffect(type) {
     const player = getPlayer();
+    
     switch (type) {
         case "killAll":
             killAllEnemiesInView();
             break;
         case "extraHealth":
             player.health += 5;
-            // console.log("Player gained 5 extra health!");
             break;
         case "invincible":
             player.invincible = true;
-            player.invincibleRemaining = 5000; // Store remaining time
-            // console.log("Player is now invincible for 5 seconds!");
-
+            player.invincibleRemaining = 5000;
             function countdownInvincibility() {
-                if (!player.invincible) return; // If it was removed, stop the countdown
-
+                if (!player.invincible) return;
                 if (gamePaused) {
-                    setTimeout(countdownInvincibility, 1000); // Wait and retry
+                    setTimeout(countdownInvincibility, 1000);
                     return;
                 }
-
                 player.invincibleRemaining -= 1000;
-                updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health); // Pass required parameters
-
+                updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health);
                 if (player.invincibleRemaining > 0) {
                     setTimeout(countdownInvincibility, 1000);
                 } else {
                     player.invincible = false;
-                    // console.log("Invincibility wore off.");
-                    updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health); // Pass required parameters
+                    updateUI(0, player.xp, player.level, player.xpToNextLevel, player.health);
                 }
             }
-
             countdownInvincibility();
             break;
         case "spinningStar":
@@ -116,22 +110,20 @@ function updateSpinningStar() {
     spinningStar.pos.y = player.pos.y + Math.sin(spinningStar.angle) * spinningStar.radius;
 
     // Check for collisions with enemies
-    enemies.forEach((enemy, index) => {
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
         if (getDistance(spinningStar.pos.x, spinningStar.pos.y, enemy.pos.x, enemy.pos.y) < 20 + enemy.radius) {
             enemy.health -= STAR_CONFIG.DAMAGE;
-            //console.log(`Spinning Star hit ${enemy.type} enemy! Enemy health: ${enemy.health}`);
             if (enemy.health <= 0) {
-                //console.log(`Spinning Star killed ${enemy.type} enemy!`);
-                enemies.splice(index, 1);
-                addXP(ENEMY_TYPES[enemy.type.toUpperCase()].EXP);
+                handleEnemyDeath(enemy);
+                enemies.splice(i, 1);
             }
         }
-    });
+    }
 
     // Check duration and cleanup
     spinningStar.duration -= 16;
     if (spinningStar.duration <= 0) {
-        console.log('Spinning Star power-up expired');
         spinningStarActive = false;
         spinningStar = null;
     }
@@ -140,7 +132,7 @@ function updateSpinningStar() {
 export function killAllEnemiesInView() {
     const player = getPlayer();
     let totalXP = 0;
-
+    
     // Create single killAll shockwave effect
     createShockwave(player.pos.x, player.pos.y, {
         isKillAll: true,
@@ -162,20 +154,16 @@ export function killAllEnemiesInView() {
 
     // Add small delay to remove enemies so shockwave is visible
     setTimeout(() => {
-        // Calculate and award XP
-        enemiesInView.forEach(e => {
-            createExplosion(e.pos.x, e.pos.y, "yellow", 15, true);
-            totalXP += ENEMY_TYPES[e.type.toUpperCase()].EXP;
-        });
-
-        // Remove enemies
+        // Process enemies in reverse order
         for (let i = enemies.length - 1; i >= 0; i--) {
             if (enemiesInView.includes(enemies[i])) {
+                const enemy = enemies[i];
+                createExplosion(enemy.pos.x, enemy.pos.y, "yellow", 15, true);
+                handleEnemyDeath(enemy);
                 enemies.splice(i, 1);
+                totalXP += ENEMY_TYPES[enemy.type.toUpperCase()].EXP;
             }
         }
-
-        ///console.log(`Kill All Power-up used! ${enemiesInView.length} enemies killed, gaining ${totalXP} XP.`);
         addXP(totalXP);
     }, 100);
 }

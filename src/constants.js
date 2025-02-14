@@ -66,7 +66,7 @@ export const PROJECTILE = {
     ENEMY_SPEED: 3,
     ENEMY_RADIUS: 5,
     DAMAGE: 1,
-    LASER_DAMAGE_MULTIPLIER: 0.1,  // Laser deals 10% of normal damage
+    LASER_DAMAGE_MULTIPLIER: 0.2,  // Laser deals 10% of normal damage
     ROCKET: {
         SPEED: 4,                  // Slightly slower than normal projectiles
         BASE_EXPLOSION_RADIUS: 50,  // Base explosion radius
