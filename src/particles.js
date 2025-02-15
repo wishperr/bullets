@@ -4,7 +4,51 @@ import { CAMERA, ENEMY_TYPES } from './constants.js';
 export let particles = [];
 export let shockwaves = [];
 
-export function createExplosion(x, y, color = "orange", particleCount = 10, isShockwaveKill = false, isLaserKill = false) {
+export function createExplosion(x, y, color = "orange", particleCount = 10, isShockwaveKill = false, isLaserKill = false, options = {}) {
+    if (options.upwardForce) {
+        // Enhanced burning effect for boss
+        if (options.fromBoss) {
+            const baseAngle = options.angle;
+            for (let i = 0; i < particleCount; i++) {
+                // Spread particles in a cone from the spawn point
+                const spreadAngle = baseAngle + (Math.random() - 0.5) * Math.PI * 0.5;
+                const speed = (1.5 + Math.random() * 2) * (options.velocityMultiplier || 1);
+                
+                particles.push({
+                    pos: { x, y },
+                    vel: {
+                        x: Math.cos(spreadAngle) * speed,
+                        y: Math.sin(spreadAngle) * speed
+                    },
+                    radius: Math.random() * 3 + 2,
+                    life: Math.random() * 20 + 15,
+                    color: color,
+                    isBurning: true,
+                    alpha: 1
+                });
+            }
+            return;
+        }
+        
+        // Original upward force behavior for non-boss particles
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.PI/2 + (Math.random() - 0.5) * 0.5; // Mostly upward direction
+            const speed = (1 + Math.random() * 2) * (options.velocityMultiplier || 1);
+            particles.push({
+                pos: { x, y },
+                vel: {
+                    x: Math.cos(angle) * speed,
+                    y: -Math.abs(Math.sin(angle) * speed) // Always move upward
+                },
+                radius: Math.random() * 2 + 1,
+                life: Math.random() * 15 + 10,
+                color: color,
+                isBurning: true
+            });
+        }
+        return;
+    }
+
     if (isLaserKill) {
         // Create brighter electric spark particles
         const sparkColors = [
@@ -94,6 +138,24 @@ export function updateParticles() {
         if (!p.isFlash) {
             p.pos.x += p.vel.x;
             p.pos.y += p.vel.y;
+            
+            // Add upward acceleration for burning particles
+            if (p.isBurning) {
+                // Enhanced burning particle behavior
+                if (p.alpha) {
+                    p.alpha = Math.max(0, p.life / 20);
+                }
+                p.radius *= 0.97; // Slightly slower size reduction
+                
+                // Add some random movement
+                p.vel.x += (Math.random() - 0.5) * 0.1;
+                p.vel.y += (Math.random() - 0.5) * 0.1;
+                
+                // Slow down particles gradually
+                p.vel.x *= 0.98;
+                p.vel.y *= 0.98;
+            }
+
             if (p.isLaserSpark) {
                 p.sparkLength *= 0.9; // Shrink spark length over time
             }
@@ -121,7 +183,22 @@ export function updateParticles() {
 export function drawParticles(ctx, camera) {
     // Draw regular particles and enhanced flash effect
     particles.forEach(p => {
-        if (p.isLaserSpark) {
+        if (p.isBurning) {
+            // Enhanced burning particle rendering
+            ctx.globalAlpha = p.alpha || p.life / 25;
+            
+            // Add glow effect for burning particles
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.pos.x - camera.x, p.pos.y - camera.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Reset shadow
+            ctx.shadowBlur = 0;
+        } else if (p.isLaserSpark) {
             // Add glow effect
             ctx.shadowBlur = p.glowSize * 5;
             ctx.shadowColor = p.color;
@@ -165,6 +242,11 @@ export function drawParticles(ctx, camera) {
             ctx.fill();
         }
     });
+
+    // Reset context properties
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
 
     // Draw enhanced shockwaves
     shockwaves.forEach(sw => {

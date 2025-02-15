@@ -30,7 +30,8 @@ export function spawnEnemy(type = "normal", waveNumber = 1, hasShield = false, s
         lastBulletSpray: null,    // Track bullet spray timing
         lastSpecialAttack: null,  // Track special attack timing
         chargeTarget: null,
-        chargeVel: null
+        chargeVel: null,
+        burnEffect: type === "boss" ? null : undefined  // Initialize burnEffect for boss
     };
 
     enemies.push(enemy);

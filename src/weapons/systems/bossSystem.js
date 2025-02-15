@@ -3,6 +3,7 @@ import { getPlayer } from '../../player.js';
 import { projectiles } from '../../projectiles.js';
 import { spawnEnemy } from '../../enemies.js';
 import { getDistance } from '../../utils.js';
+import { createExplosion } from '../../particles.js';
 
 const BOSS_PHASES = {
     PHASE1: 0.75, // 75% health
@@ -10,26 +11,85 @@ const BOSS_PHASES = {
     PHASE3: 0.25  // 25% health
 };
 
+// Boss burning effect settings with brighter colors
+const BURN_EFFECT = {
+    PHASE2: {
+        PARTICLES: 2,
+        COLOR: '#ffdd00',  // Bright yellow
+        RADIUS: 2,
+        FREQUENCY: 0.3
+    },
+    PHASE3: {
+        PARTICLES: 3,
+        COLOR: '#ff5500',  // Bright orange
+        RADIUS: 3,
+        FREQUENCY: 0.4
+    },
+    PHASE4: {
+        PARTICLES: 4,
+        COLOR: '#ff0000',  // Pure red
+        RADIUS: 4,
+        FREQUENCY: 0.5
+    }
+};
+
 function updateBossPhase(boss, healthPercentage) {
     // Update phase based on health percentage
     if (healthPercentage <= BOSS_PHASES.PHASE3 && boss.currentPhase < 4) {
         boss.currentPhase = 4;
         boss.speed = ENEMY_TYPES.BOSS.SPEED * 1.5;
+        boss.burnEffect = BURN_EFFECT.PHASE4;
     } else if (healthPercentage <= BOSS_PHASES.PHASE2 && boss.currentPhase < 3) {
         boss.currentPhase = 3;
         boss.speed = ENEMY_TYPES.BOSS.SPEED * 1.2;
+        boss.burnEffect = BURN_EFFECT.PHASE3;
     } else if (healthPercentage <= BOSS_PHASES.PHASE1 && boss.currentPhase < 2) {
         boss.currentPhase = 2;
         boss.speed = ENEMY_TYPES.BOSS.SPEED;
+        boss.burnEffect = BURN_EFFECT.PHASE2;
+    }
+}
+
+function createBurnParticles(boss) {
+    if (!boss.burnEffect) return;
+    
+    if (Math.random() < boss.burnEffect.FREQUENCY) {
+        // Create particles around the boss's perimeter
+        for (let i = 0; i < boss.burnEffect.PARTICLES; i++) {
+            // Position particles on the boss's perimeter
+            const angle = Math.random() * Math.PI * 2;
+            const x = boss.pos.x + Math.cos(angle) * boss.radius;
+            const y = boss.pos.y + Math.sin(angle) * boss.radius;
+            
+            createExplosion(
+                x, 
+                y, 
+                boss.burnEffect.COLOR, 
+                boss.burnEffect.RADIUS,
+                false,
+                false,
+                { 
+                    velocityMultiplier: 0.8,
+                    upwardForce: true,
+                    fromBoss: true,
+                    angle: angle // Pass the angle for directional spread
+                }
+            );
+        }
     }
 }
 
 export function updateBoss(boss) {
     const player = getPlayer();
     if (!player) return;
-
+    
     const healthPercentage = boss.health / ENEMY_TYPES.BOSS.HEALTH;
     updateBossPhase(boss, healthPercentage);
+    
+    // Create burn particles if boss is in phase 2 or higher
+    if (boss.currentPhase >= 2) {
+        createBurnParticles(boss);
+    }
 
     // Base movement when not charging
     if (!boss.isCharging) {
