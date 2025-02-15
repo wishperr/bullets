@@ -1,10 +1,11 @@
-import { initializePlayer, getPlayer, handlePlayerMovement, addXP } from './player.js';
+import { initializePlayer, getPlayer, handlePlayerMovement } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
 import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI, showBossMessage } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
-import { updatePowerups, drawPowerups, dropPowerup, spinningStar } from './powerups.js';
-import { createExplosion, updateParticles, drawParticles } from "./particles.js";
+import { updatePowerups, drawPowerups } from './powerups.js';
+import { updateParticles, drawParticles } from "./particles.js";
+import { handleCollisions } from './systems/collisionSystem.js';
 import { getDistance } from './utils.js';
 import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
@@ -68,12 +69,16 @@ function spawnWaveEnemies() {
     }
 
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
-
     for (let i = 0; i < enemyCount; i++) {
         let type = "normal";
-
-        if (Math.random() < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
+        
+        // First determine if we spawn a special enemy type
+        const roll = Math.random();
+        if (roll < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
             type = "tank";
+        } else if (roll < (WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) + 0.2) {
+            // 20% chance after tank roll to spawn a berserker
+            type = "berserker";
         }
 
         if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
@@ -121,7 +126,7 @@ function updateCamera() {
 export function gameLoop() {
     if (gameOver || gamePaused) return;
 
-    handlePlayerMovement();
+    handlePlayerMovement(); // This is imported from player.js
     updateProjectiles();
     updateEnemies();
     updateParticles();
@@ -130,86 +135,23 @@ export function gameLoop() {
 
     if (enemyInView()) {
         if (!projectileInterval) updateProjectileInterval();
-    } else {
-        if (projectileInterval) {
-            clearInterval(projectileInterval);
-            projectileInterval = null;
-        }
+    } else if (projectileInterval) {
+        clearInterval(projectileInterval);
+        projectileInterval = null;
     }
 
-    const player = getPlayer();
-    if (player) {
-        // Handle shooter enemy projectiles hitting the player
-        for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
-            const p = projectiles[projIndex];
-            if (p.enemyShot) {
-                const distance = getDistance(p.pos.x, p.pos.y, player.pos.x);
-                if (distance < p.radius + player.radius) {
-                    player.health -= 1;
-                    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
-                    projectiles.splice(projIndex, 1);
-                    if (player.health <= 0) {
-                        gameOver = true;
-                        stopGame();
-                        return;
-                    }
-                }
-            }
-        }
-
-        enemies.forEach((e, enemyIndex) => {
-            // Handle player collision with enemy
-            if (!player.invincible && getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y) < player.radius + e.radius) {
-                player.health -= e.damage || 1;
-                updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
-                
-                if (e.type !== "boss") {
-                    enemies.splice(enemyIndex, 1);
-                }
-        
-                if (player.health <= 0) {
-                    gameOver = true; 
-                    stopGame();
-                    return;
-                }
-            }
-        
-            // Handle player projectiles hitting enemies
-            for (let projIndex = projectiles.length - 1; projIndex >= 0; projIndex--) {
-                const p = projectiles[projIndex];
-                if (p.enemyShot) continue;
-                const distance = getDistance(p.pos.x, p.pos.y, e.pos.x, e.pos.y);
-        
-                if (distance < p.radius + e.radius) {
-                    if (e.type === "boss" && e.isInvulnerable) {
-                        // Boss is invulnerable, just remove the projectile
-                        projectiles.splice(projIndex, 1);
-                        continue;
-                    }
-
-                    if (e.shield > 0) {
-                        e.shield--;
-                    } else {
-                        e.health -= p.damage || projectiles.DAMAGE;
-                    }
-        
-                    projectiles.splice(projIndex, 1);
-        
-                    if (e.health <= 0) {
-                        handleEnemyDeath(e);
-                        if (e.type !== "boss" || e.currentPhase === 4) {
-                            enemies.splice(enemyIndex, 1);
-                        }
-                        break;
-                    }
-                    break;
-                }
-            }
-        }); 
+    // Use the centralized collision system
+    if (handleCollisions()) {
+        gameOver = true;
+        stopGame();
+        return;
     }
 
     draw();
-    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
+    const player = getPlayer();
+    if (player) {
+        updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -237,12 +179,7 @@ export function resumeGame() {
     }
 }
 
-export function startGame() {
-    resetKillCount(); // Reset kill counter when game starts
-    gameStarted = true;
-    lastTime = Date.now();
-    requestAnimationFrame(gameLoop);
-}
+// Removed unused startGame() function here
 
 function drawGrid() {
     ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
@@ -285,14 +222,55 @@ function draw() {
     drawParticles(ctx, camera);
 
     enemies.forEach(e => {
-        ctx.fillStyle = e.type === "boss" ? 
-            (e.isInvulnerable ? "rgba(255, 0, 0, 0.5)" : "red") : 
-            e.type === "tank" ? "yellow" : 
-            e.type === "shooter" ? "pink" : "green";
+        if (e.type === "berserker") {
+            // Draw berserker with unique appearance
+            const baseColor = e.rageStage === 3 ? '#660000' : 
+                            e.rageStage === 2 ? '#884400' : 
+                            e.rageStage === 1 ? '#666600' : '#446600';
+            
+            // Draw main body with spiky appearance
+            const spikes = 8;
+            const spikeLength = 5 + (e.rageStage * 2); // Spikes grow with rage
+            
+            ctx.fillStyle = baseColor;
+            ctx.beginPath();
+            
+            for (let i = 0; i < spikes * 2; i++) {
+                const angle = (i * Math.PI) / spikes;
+                const radius = i % 2 === 0 ? e.radius + spikeLength : e.radius;
+                const x = e.pos.x - camera.x + Math.cos(angle) * radius;
+                const y = e.pos.y - camera.y + Math.sin(angle) * radius;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.closePath();
+            ctx.fill();
 
-        ctx.beginPath();
-        ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
-        ctx.fill();
+            // Add glowing outline based on rage state
+            if (e.rageStage > 0) {
+                ctx.strokeStyle = e.rageStage === 3 ? '#ff0000' : 
+                                e.rageStage === 2 ? '#ff8800' : '#ffff00';
+                ctx.lineWidth = 2 + e.rageStage;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.strokeStyle;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        } else {
+            ctx.fillStyle = e.type === "boss" ? 
+                (e.isInvulnerable ? "rgba(255, 0, 0, 0.5)" : "red") : 
+                e.type === "tank" ? "yellow" : 
+                e.type === "shooter" ? "pink" : "green";
+
+            ctx.beginPath();
+            ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // Add boss health bar and percentage
         if (e.type === "boss") {

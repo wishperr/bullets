@@ -1,15 +1,10 @@
 import { getPlayer } from './player.js';
-import { enemies } from './enemies.js';
-import { stopGame, gamePaused } from './game.js';
 import { GAME_WIDTH, GAME_HEIGHT } from './constants.js';
-import { updateUI } from './ui.js';
-import { getDistance } from './utils.js';
 import { findClosestEnemy } from './weapons/common/weaponUtils.js';
-import { handleEnemyDeath, getKillCount } from './weapons/common/enemyUtils.js';
 
 // Import weapon systems
 import { laserBeams, shootLaser, updateLaserBeams, drawLaserBeams } from './weapons/systems/laserSystem.js';
-import { rocketTrails, shootRocket, handleRocketCollision, updateRocketTrails, createRocketTrail, drawRocketTrails, drawRocket } from './weapons/systems/rocketSystem.js';
+import { rocketTrails, shootRocket, updateRocketTrails, createRocketTrail, drawRocketTrails } from './weapons/systems/rocketSystem.js';
 import { lightningChains, lightningVictims, shootChainLightning, updateLightning, drawLightning } from './weapons/systems/chainLightningSystem.js';
 import { shootShotgun } from './weapons/systems/shotgunSystem.js';
 
@@ -18,21 +13,21 @@ export let projectiles = [];
 
 export function shootProjectiles() {
     const player = getPlayer();
-    if (!player || gamePaused) return;
+    if (!player) return;
 
     const closestEnemy = findClosestEnemy(player);
     if (!closestEnemy) return;
 
     switch(player.weapon) {
         case "laser":
-            shootLaser(player);
+            shootLaser(player, closestEnemy);
             break;
         case "rockets":
             const rocket = shootRocket(player, closestEnemy);
             projectiles.push(rocket);
             break;
         case "chainLightning":
-            shootChainLightning(player, closestEnemy, handleEnemyDeath);
+            shootChainLightning(player, closestEnemy);
             break;
         case "shotgun":
             const shotgunProjectiles = shootShotgun(player, closestEnemy);
@@ -42,13 +37,10 @@ export function shootProjectiles() {
 }
 
 export function updateProjectiles() {
-    if (gamePaused) return;
-
     updateLightning();
     updateLaserBeams();
     updateRocketTrails();
 
-    const player = getPlayer();
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         
@@ -59,43 +51,7 @@ export function updateProjectiles() {
         p.pos.x += p.vel.x;
         p.pos.y += p.vel.y;
 
-        if (p.enemyShot) {
-            const dist = getDistance(p.pos.x, p.pos.y, player.pos.x, player.pos.y);
-            if (dist < player.radius + p.radius) {
-                if (player.invincible) {
-                    console.log("🛡️ Player is invincible! Projectile did no damage.");
-                } else {
-                    player.health -= 1;
-                    updateUI(getKillCount(), player.xp, player.level, player.xpToNextLevel, player.health);
-                    console.log(`⚠️ Player received ${p.damage} damage from a projectile!`);
-                    if (player.health <= 0) {
-                        stopGame();
-                        return;
-                    }
-                }
-                projectiles.splice(i, 1);
-            }
-        } else {
-            for (let j = enemies.length - 1; j >= 0; j--) {
-                const enemy = enemies[j];
-                const distance = getDistance(p.pos.x, p.pos.y, enemy.pos.x, enemy.pos.y);
-
-                if (distance < enemy.radius + p.radius) {
-                    if (p.isRocket) {
-                        handleRocketCollision(p, j, handleEnemyDeath);
-                    } else {
-                        enemy.health -= p.damage;
-                        if (enemy.health <= 0) {
-                            handleEnemyDeath(enemy);
-                            enemies.splice(j, 1);
-                        }
-                    }
-                    projectiles.splice(i, 1);
-                    break;
-                }
-            }
-        }
-
+        // Remove projectiles that are out of bounds
         if (p.pos.x < 0 || p.pos.x > GAME_WIDTH || p.pos.y < 0 || p.pos.y > GAME_HEIGHT) {
             projectiles.splice(i, 1);
         }

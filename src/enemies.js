@@ -3,8 +3,9 @@ import { projectiles } from './projectiles.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_TYPES, WAVE, PROJECTILE } from './constants.js';
 import { getRandomEdgePosition, getDistance } from './utils.js';
 import { updateBoss } from './weapons/systems/bossSystem.js';
+import { createExplosion } from './particles.js';
 
-export let enemies = [];
+export const enemies = [];
 let normalEnemyKillCount = 0;
 
 export function spawnEnemy(type = "normal", waveNumber = 1, hasShield = false, spawnPos = null) {
@@ -22,6 +23,9 @@ export function spawnEnemy(type = "normal", waveNumber = 1, hasShield = false, s
         shootCooldown: enemyConfig.SHOOT_COOLDOWN || 0,
         lastShot: Date.now(),
         shield: hasShield ? 3 : 0,
+        // Berserker-specific properties
+        initialHealth: type === "berserker" ? enemyConfig.HEALTH : null,
+        rageStage: type === "berserker" ? 0 : null,
         // Boss-specific properties
         currentPhase: type === "boss" ? 1 : null,
         isCharging: false,
@@ -30,42 +34,12 @@ export function spawnEnemy(type = "normal", waveNumber = 1, hasShield = false, s
         lastBulletSpray: null,    // Track bullet spray timing
         lastSpecialAttack: null,  // Track special attack timing
         chargeTarget: null,
-        chargeVel: null
+        chargeVel: null,
+        burnEffect: type === "boss" ? null : undefined  // Initialize burnEffect for boss
     };
 
     enemies.push(enemy);
     return enemy;
-}
-
-export function spawnWaveEnemies(waveNumber) {
-    // Don't spawn new enemies if there's a boss fight
-    const bossAlive = enemies.some(e => e.type === "boss");
-    if (bossAlive) return;
-
-    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
-
-    if (waveNumber % WAVE.BOSS_SPAWN_INTERVAL === 0) {
-        // Clear existing enemies before spawning boss
-        enemies.length = 0;
-        spawnEnemy("BOSS");
-        return;
-    }
-
-    for (let i = 0; i < enemyCount; i++) {
-        let type = "NORMAL";
-
-        if (Math.random() < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
-            type = "TANK";
-        }
-
-        if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
-            spawnEnemy(type, waveNumber, true);
-        } else if (waveNumber % WAVE.SHIELDED_SPAWN_INTERVAL === 0 && Math.random() < WAVE.SHOOTER_SPAWN_CHANCE) {
-            spawnEnemy("SHOOTER", waveNumber);
-        } else {
-            spawnEnemy(type);
-        }
-    }
 }
 
 function avoidOverlap(enemy, otherEnemies) {
@@ -92,6 +66,70 @@ function avoidOverlap(enemy, otherEnemies) {
     return { dx, dy };
 }
 
+function updateBerserker(enemy) {
+    const healthPercentage = enemy.health / enemy.initialHealth;
+    const config = ENEMY_TYPES.BERSERKER;
+    let newRageStage = enemy.rageStage;
+
+    // Update rage stage based on health
+    if (healthPercentage <= config.RAGE_THRESHOLDS.STAGE3 && enemy.rageStage < 3) {
+        newRageStage = 3;
+        createRageEffect(enemy, '#ff0000'); // Red particles for maximum rage
+    } else if (healthPercentage <= config.RAGE_THRESHOLDS.STAGE2 && enemy.rageStage < 2) {
+        newRageStage = 2;
+        createRageEffect(enemy, '#ff8800'); // Orange particles for medium rage
+    } else if (healthPercentage <= config.RAGE_THRESHOLDS.STAGE1 && enemy.rageStage < 1) {
+        newRageStage = 1;
+        createRageEffect(enemy, '#ffff00'); // Yellow particles for initial rage
+    }
+
+    // If rage stage changed, update stats
+    if (newRageStage !== enemy.rageStage) {
+        enemy.rageStage = newRageStage;
+        const multipliers = config.RAGE_MULTIPLIERS[`STAGE${enemy.rageStage}`];
+        enemy.speed = config.SPEED * multipliers.SPEED;
+        enemy.damage = config.DAMAGE * multipliers.DAMAGE;
+    }
+
+    // Create rage particles based on stage
+    if (enemy.rageStage > 0 && Math.random() < 0.1 + (enemy.rageStage * 0.1)) {
+        const color = enemy.rageStage === 3 ? '#ff0000' : 
+                     enemy.rageStage === 2 ? '#ff8800' : '#ffff00';
+        createRageParticles(enemy, color);
+    }
+}
+
+function createRageEffect(enemy, color) {
+    // Create burst effect when entering new rage stage
+    createExplosion(
+        enemy.pos.x,
+        enemy.pos.y,
+        color,
+        20,
+        false,
+        false,
+        { 
+            velocityMultiplier: 2,
+            isRageTransform: true 
+        }
+    );
+}
+
+function createRageParticles(enemy, color) {
+    createExplosion(
+        enemy.pos.x,
+        enemy.pos.y,
+        color,
+        2,
+        false,
+        false,
+        {
+            velocityMultiplier: 0.5,
+            isRageAura: true
+        }
+    );
+}
+
 export function updateEnemies() {
     const player = getPlayer();
     if (!player) return;
@@ -99,6 +137,16 @@ export function updateEnemies() {
     enemies.forEach(e => {
         if (e.type === "boss") {
             updateBoss(e);
+        } else if (e.type === "berserker") {
+            updateBerserker(e);
+            // Move towards player with updated speed
+            const dx = player.pos.x - e.pos.x;
+            const dy = player.pos.y - e.pos.y;
+            const dist = getDistance(player.pos.x, player.pos.y, e.pos.x, e.pos.y);
+            const separation = avoidOverlap(e, enemies);
+            
+            e.pos.x += ((dx / dist) * e.speed) + separation.dx;
+            e.pos.y += ((dy / dist) * e.speed) + separation.dy;
         } else {
             const dx = player.pos.x - e.pos.x;
             const dy = player.pos.y - e.pos.y;

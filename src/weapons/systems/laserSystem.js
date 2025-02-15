@@ -1,32 +1,31 @@
 import { CAMERA, PROJECTILE, ENEMY_TYPES } from '../../constants.js';
-import { enemies } from '../../enemies.js';
-import { createExplosion } from '../../particles.js';
-import { pointToLineDistance } from '../common/weaponUtils.js';
-import { handleEnemyDeath } from '../common/enemyUtils.js';
 import { getDistance } from '../../utils.js';
+import { createExplosion } from '../../particles.js';
+import { enemies } from '../../enemies.js';
 
 export let laserBeams = [];
 
-export function shootLaser(player) {
-    const sortedEnemies = enemies
-        .filter(enemy => {
-            const inViewX = enemy.pos.x >= player.pos.x - CAMERA.WIDTH / 2 &&
-                          enemy.pos.x <= player.pos.x + CAMERA.WIDTH / 2;
-            const inViewY = enemy.pos.y >= player.pos.y - CAMERA.HEIGHT / 2 &&
-                          enemy.pos.y <= player.pos.y + CAMERA.HEIGHT / 2;
-            return inViewX && inViewY;
-        })
+function findClosestTargets(player, count, excludeTargets = new Set()) {
+    return enemies
+        .filter(enemy => !excludeTargets.has(enemy))
         .map(enemy => ({
             enemy,
             distance: getDistance(player.pos.x, player.pos.y, enemy.pos.x, enemy.pos.y)
         }))
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, count)
+        .map(item => item.enemy);
+}
 
+export function shootLaser(player, target) {
     const numLasers = 1 + player.additionalProjectiles;
     const laserDamage = Math.max(0.5, player.projectileStrength * PROJECTILE.LASER_DAMAGE_MULTIPLIER);
     
-    for (let i = 0; i < Math.min(numLasers, sortedEnemies.length); i++) {
-        const target = sortedEnemies[i].enemy;
+    // Get all targets for the multiple lasers
+    const targetedEnemies = new Set();
+    const targets = findClosestTargets(player, numLasers);
+    
+    targets.forEach(target => {
         const angle = Math.atan2(target.pos.y - player.pos.y, target.pos.x - player.pos.x);
         
         laserBeams.push({
@@ -39,7 +38,7 @@ export function shootLaser(player) {
             color: 'cyan',
             hitEnemies: new Set()
         });
-    }
+    });
 }
 
 export function updateLaserBeams() {
@@ -49,37 +48,11 @@ export function updateLaserBeams() {
 
         if (laser.life <= 0) {
             laserBeams.splice(i, 1);
-            continue;
-        }
-
-        const end = {
-            x: laser.start.x + Math.cos(laser.angle) * laser.length,
-            y: laser.start.y + Math.sin(laser.angle) * laser.length
-        };
-
-        for (let j = enemies.length - 1; j >= 0; j--) {
-            const enemy = enemies[j];
-            if (laser.hitEnemies.has(enemy)) continue;
-
-            const distance = pointToLineDistance(
-                enemy.pos,
-                laser.start,
-                end
-            );
-
-            if (distance < enemy.radius + laser.width/2) {
-                enemy.health -= laser.damage;
-                laser.hitEnemies.add(enemy);
-                
-                if (enemy.health <= 0) {
-                    handleEnemyDeath(enemy);
-                    enemies.splice(j, 1);
-                }
-            }
         }
     }
 }
 
+// Drawing code remains the same
 export function drawLaserBeams(ctx, camera) {
     laserBeams.forEach(laser => {
         const end = {
