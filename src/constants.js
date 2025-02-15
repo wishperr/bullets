@@ -50,6 +50,32 @@ export const ENEMY_TYPES = {
         DAMAGE: 30,
         RADIUS: 40,
         EXP: 10
+    },
+    BERSERKER: {
+        SPEED: 1.2,          // Starting speed (will increase as damaged)
+        HEALTH: 8,           // More health than normal enemies
+        DAMAGE: 1,           // Starting damage (will increase as enraged)
+        RADIUS: 12,          // Slightly larger than normal enemies
+        EXP: 4,             // More XP reward due to risk
+        RAGE_THRESHOLDS: {   // Health percentages where berserker gets enraged
+            STAGE1: 0.75,    // 75% health - slight boost
+            STAGE2: 0.50,    // 50% health - medium boost
+            STAGE3: 0.25     // 25% health - maximum rage
+        },
+        RAGE_MULTIPLIERS: {  // Multipliers for each rage stage
+            STAGE1: {
+                SPEED: 1.5,
+                DAMAGE: 1.5
+            },
+            STAGE2: {
+                SPEED: 2,
+                DAMAGE: 2
+            },
+            STAGE3: {
+                SPEED: 3,
+                DAMAGE: 3
+            }
+        }
     }
 };
 

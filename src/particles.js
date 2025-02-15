@@ -5,6 +5,51 @@ export let particles = [];
 export let shockwaves = [];
 
 export function createExplosion(x, y, color = "orange", particleCount = 10, isShockwaveKill = false, isLaserKill = false, options = {}) {
+    // Add rage transformation effect
+    if (options.isRageTransform) {
+        // Create an expanding ring effect
+        const numParticles = 30;
+        for (let i = 0; i < numParticles; i++) {
+            const angle = (Math.PI * 2 * i) / numParticles;
+            const speed = 3 * (options.velocityMultiplier || 1);
+            particles.push({
+                pos: { x, y },
+                vel: {
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed
+                },
+                radius: 3,
+                life: 30,
+                color: color,
+                isRageParticle: true,
+                alpha: 1
+            });
+        }
+        return;
+    }
+
+    // Add continuous rage aura effect
+    if (options.isRageAura) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 15; // Random distance from enemy
+        particles.push({
+            pos: {
+                x: x + Math.cos(angle) * distance,
+                y: y + Math.sin(angle) * distance
+            },
+            vel: {
+                x: (Math.random() - 0.5) * 0.5,
+                y: (Math.random() - 0.5) * 0.5
+            },
+            radius: Math.random() * 2 + 1,
+            life: Math.random() * 20 + 10,
+            color: color,
+            isRageParticle: true,
+            alpha: 0.8
+        });
+        return;
+    }
+
     if (options.upwardForce) {
         // Enhanced burning effect for boss
         if (options.fromBoss) {
@@ -132,12 +177,22 @@ export function createShockwave(x, y, config) {
 }
 
 export function updateParticles() {
-    // Update regular particles
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         if (!p.isFlash) {
             p.pos.x += p.vel.x;
             p.pos.y += p.vel.y;
+            
+            if (p.isRageParticle) {
+                p.alpha = Math.max(0, p.life / 30);
+                // Add slight spiral effect for rage particles
+                if (p.vel.x !== 0 || p.vel.y !== 0) {
+                    const speed = Math.sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
+                    const angle = Math.atan2(p.vel.y, p.vel.x) + 0.1;
+                    p.vel.x = Math.cos(angle) * speed;
+                    p.vel.y = Math.sin(angle) * speed;
+                }
+            }
             
             // Add upward acceleration for burning particles
             if (p.isBurning) {
@@ -181,9 +236,17 @@ export function updateParticles() {
 }
 
 export function drawParticles(ctx, camera) {
-    // Draw regular particles and enhanced flash effect
     particles.forEach(p => {
-        if (p.isBurning) {
+        if (p.isRageParticle) {
+            ctx.globalAlpha = p.alpha;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = p.color;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.pos.x - camera.x, p.pos.y - camera.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        } else if (p.isBurning) {
             // Enhanced burning particle rendering
             ctx.globalAlpha = p.alpha || p.life / 25;
             

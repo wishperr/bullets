@@ -69,12 +69,16 @@ function spawnWaveEnemies() {
     }
 
     let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
-
     for (let i = 0; i < enemyCount; i++) {
         let type = "normal";
-
-        if (Math.random() < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
+        
+        // First determine if we spawn a special enemy type
+        const roll = Math.random();
+        if (roll < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
             type = "tank";
+        } else if (roll < (WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) + 0.2) {
+            // 20% chance after tank roll to spawn a berserker
+            type = "berserker";
         }
 
         if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
@@ -218,14 +222,55 @@ function draw() {
     drawParticles(ctx, camera);
 
     enemies.forEach(e => {
-        ctx.fillStyle = e.type === "boss" ? 
-            (e.isInvulnerable ? "rgba(255, 0, 0, 0.5)" : "red") : 
-            e.type === "tank" ? "yellow" : 
-            e.type === "shooter" ? "pink" : "green";
+        if (e.type === "berserker") {
+            // Draw berserker with unique appearance
+            const baseColor = e.rageStage === 3 ? '#660000' : 
+                            e.rageStage === 2 ? '#884400' : 
+                            e.rageStage === 1 ? '#666600' : '#446600';
+            
+            // Draw main body with spiky appearance
+            const spikes = 8;
+            const spikeLength = 5 + (e.rageStage * 2); // Spikes grow with rage
+            
+            ctx.fillStyle = baseColor;
+            ctx.beginPath();
+            
+            for (let i = 0; i < spikes * 2; i++) {
+                const angle = (i * Math.PI) / spikes;
+                const radius = i % 2 === 0 ? e.radius + spikeLength : e.radius;
+                const x = e.pos.x - camera.x + Math.cos(angle) * radius;
+                const y = e.pos.y - camera.y + Math.sin(angle) * radius;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.closePath();
+            ctx.fill();
 
-        ctx.beginPath();
-        ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
-        ctx.fill();
+            // Add glowing outline based on rage state
+            if (e.rageStage > 0) {
+                ctx.strokeStyle = e.rageStage === 3 ? '#ff0000' : 
+                                e.rageStage === 2 ? '#ff8800' : '#ffff00';
+                ctx.lineWidth = 2 + e.rageStage;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.strokeStyle;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        } else {
+            ctx.fillStyle = e.type === "boss" ? 
+                (e.isInvulnerable ? "rgba(255, 0, 0, 0.5)" : "red") : 
+                e.type === "tank" ? "yellow" : 
+                e.type === "shooter" ? "pink" : "green";
+
+            ctx.beginPath();
+            ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // Add boss health bar and percentage
         if (e.type === "boss") {
