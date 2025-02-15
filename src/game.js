@@ -10,6 +10,7 @@ import { getDistance } from './utils.js';
 import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
 import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
+import { spawnWaveEnemies } from './systems/waveSystem.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -40,7 +41,7 @@ function startWave() {
             if (Date.now() >= nextWaveTime && !bossAlive) {
                 waveNumber++;
                 enemySpawnRate = Math.max(500, enemySpawnRate - 200);
-                spawnWaveEnemies();
+                spawnWaveEnemies(waveNumber);
                 updateWaveUI(waveNumber);
                 nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
             }
@@ -59,41 +60,6 @@ function startWave() {
             }
         }
     }, 1000);
-}
-
-function spawnWaveEnemies() {
-    if (waveNumber === 2) {
-        const boss = spawnEnemy("arsenal_boss");
-        initializeArsenalBoss(boss);
-        showBossMessage();
-        return;
-    } else if (waveNumber === 3) {
-        spawnEnemy("boss");
-        showBossMessage();
-        return;
-    }
-
-    let enemyCount = WAVE.INITIAL_ENEMY_COUNT + waveNumber * WAVE.ENEMY_COUNT_INCREMENT;
-    for (let i = 0; i < enemyCount; i++) {
-        let type = "normal";
-        
-        // First determine if we spawn a special enemy type
-        const roll = Math.random();
-        if (roll < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
-            type = "tank";
-        } else if (roll < (WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) + 0.3) {
-            // 30% chance after tank roll to spawn a berserker
-            type = "berserker";
-        }
-
-        if (waveNumber >= 5 && Math.random() < WAVE.SHIELDED_SPAWN_CHANCE) {
-            spawnEnemy(type, waveNumber, true);
-        } else if (waveNumber % WAVE.SHIELDED_SPAWN_INTERVAL === 0 && Math.random() < WAVE.SHOOTER_SPAWN_CHANCE) {
-            spawnEnemy("shooter", waveNumber);
-        } else {
-            spawnEnemy(type);
-        }
-    }
 }
 
 function enemyInView() {
@@ -115,7 +81,7 @@ function updateProjectileInterval() {
 
 export function initializeGame() {
     initializePlayer();
-    spawnWaveEnemies();
+    spawnWaveEnemies(1); // Pass wave number 1 explicitly
     startWave();
     updateProjectileInterval();
 }
