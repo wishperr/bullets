@@ -9,6 +9,7 @@ import { handleCollisions } from './systems/collisionSystem.js';
 import { getDistance } from './utils.js';
 import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
+import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -33,8 +34,8 @@ function startWave() {
 
     setInterval(() => {
         if (!gameOver && !gamePaused) {
-            // Check if there's a boss alive
-            const bossAlive = enemies.some(e => e.type === "boss");
+            // Check if there's any type of boss alive
+            const bossAlive = enemies.some(e => e.type === "boss" || e.type === "arsenal_boss");
             
             if (Date.now() >= nextWaveTime && !bossAlive) {
                 waveNumber++;
@@ -49,7 +50,7 @@ function startWave() {
     // Update wave timer every second
     setInterval(() => {
         if (!gameOver && !gamePaused) {
-            const bossAlive = enemies.some(e => e.type === "boss");
+            const bossAlive = enemies.some(e => e.type === "boss" || e.type === "arsenal_boss");
             if (bossAlive) {
                 UI_ELEMENTS.waveTimer.innerText = "Defeat the boss!";
             } else {
@@ -61,8 +62,12 @@ function startWave() {
 }
 
 function spawnWaveEnemies() {
-    if (waveNumber === 3) {
-        // Spawn boss without clearing existing enemies
+    if (waveNumber === 2) {
+        const boss = spawnEnemy("arsenal_boss");
+        initializeArsenalBoss(boss);
+        showBossMessage();
+        return;
+    } else if (waveNumber === 3) {
         spawnEnemy("boss");
         showBossMessage();
         return;
@@ -76,8 +81,8 @@ function spawnWaveEnemies() {
         const roll = Math.random();
         if (roll < WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) {
             type = "tank";
-        } else if (roll < (WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) + 0.2) {
-            // 20% chance after tank roll to spawn a berserker
+        } else if (roll < (WAVE.TANK_SPAWN_CHANCE_BASE + waveNumber * WAVE.TANK_SPAWN_CHANCE_INCREMENT) + 0.3) {
+            // 30% chance after tank roll to spawn a berserker
             type = "berserker";
         }
 
@@ -222,7 +227,29 @@ function draw() {
     drawParticles(ctx, camera);
 
     enemies.forEach(e => {
-        if (e.type === "berserker") {
+        if (e.type === "arsenal_boss") {
+            drawArsenalBoss(ctx, e, camera);
+        } else if (e.type === "arsenal_turret") {
+            // Draw turret
+            ctx.fillStyle = "#888888";
+            ctx.beginPath();
+            ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw turret barrel
+            if (e.lastTarget) {
+                const angle = Math.atan2(e.lastTarget.y - e.pos.y, e.lastTarget.x - e.pos.x);
+                ctx.strokeStyle = "#666666";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(e.pos.x - camera.x, e.pos.y - camera.y);
+                ctx.lineTo(
+                    e.pos.x - camera.x + Math.cos(angle) * e.radius * 1.5,
+                    e.pos.y - camera.y + Math.sin(angle) * e.radius * 1.5
+                );
+                ctx.stroke();
+            }
+        } else if (e.type === "berserker") {
             // Draw berserker with unique appearance
             const baseColor = e.rageStage === 3 ? '#660000' : 
                             e.rageStage === 2 ? '#884400' : 
