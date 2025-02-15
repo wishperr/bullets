@@ -148,14 +148,34 @@ function handleMainShot(boss, player) {
 }
 
 function updateShieldSegments(boss, player) {
-    if (boss.currentPhase === 1) {
+    if (boss.currentPhase === 1 || boss.currentPhase === 4) {
         // Rotate entire shield
         boss.shieldAngle += SHIELD_CONFIG.ROTATION_SPEED;
         shieldSegments.forEach((segment, i) => {
             segment.angle = boss.shieldAngle + (i * 2 * Math.PI) / SHIELD_CONFIG.SEGMENTS;
+            
+            // In phase 4, also handle shooting while rotating
+            if (boss.currentPhase === 4 && (!segment.lastShot || Date.now() - segment.lastShot > 3000)) {
+                const shotAngle = segment.angle + Math.random() * 0.5 - 0.25;
+                projectiles.push({
+                    pos: {
+                        x: boss.pos.x + Math.cos(segment.angle) * SHIELD_CONFIG.RADIUS,
+                        y: boss.pos.y + Math.sin(segment.angle) * SHIELD_CONFIG.RADIUS
+                    },
+                    vel: {
+                        x: Math.cos(shotAngle) * PROJECTILE.ENEMY_SPEED,
+                        y: Math.sin(shotAngle) * PROJECTILE.ENEMY_SPEED
+                    },
+                    radius: PROJECTILE.ENEMY_RADIUS,
+                    damage: ENEMY_TYPES.ARSENAL_BOSS.DAMAGE / 2,
+                    enemyShot: true,
+                    color: "#ffaa00"
+                });
+                segment.lastShot = Date.now();
+            }
         });
     } else {
-        // Independent segment behavior
+        // Independent segment behavior for other phases
         shieldSegments.forEach(segment => {
             if (segment.independent && (!segment.lastShot || Date.now() - segment.lastShot > 3000)) {
                 const shotAngle = segment.angle + Math.random() * 0.5 - 0.25;
