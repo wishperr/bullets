@@ -6,8 +6,8 @@ import { initializeArsenalBoss } from '../weapons/systems/arsenalSystem.js';
 export const WAVE_CONFIGS = {
     // Waves 1-5 defined explicitly
     1: {
-        normal: 8,
-        tank: 2
+        normal: 10,
+        tank: 10
     },
     2: {
         arsenal_boss: 1,

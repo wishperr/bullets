@@ -2,25 +2,36 @@ import { getPlayer } from '../../player.js';
 import { projectiles } from '../../projectiles.js';
 import { enemies } from '../../enemies.js';
 import { getDistance } from '../../utils.js';
+import { createExplosion } from '../../particles.js';
+import { addXP } from '../../player.js';  // Add this import
+import { handleEnemyDeath } from '../common/enemyUtils.js';  // Add this import
 
 let drones = [];
 const DRONE_CONFIG = {
     ORBIT_RADIUS: 100,
     ORBIT_SPEED: 0.02,
     BASE_ATTACK_RANGE: 500,
-    PROJECTILE_SPEED: 5,
     SIZE: {
-        BODY: 8,
-        WING: 6
+        BODY: 12,          // Increased body size
+        WING: 8,
+        ENGINE: 3,         // Size of engine glow
+        WEAPON: 4          // Size of weapon mounts
     },
     ATTACK: {
-        BURST_COUNT: 3,
-        BURST_DELAY: 50,  // ms between each burst shot
-        DAMAGE_MULTIPLIER: 0.3,  // 30% of player's damage per projectile
-        PROJECTILE_SPREAD: 0.2,  // spread angle in radians
-        COLOR: {
-            PRIMARY: '#00ffff',
-            TRAIL: '#00ffff44'
+        BURST_COUNT: 1,  // Changed to 1 since BFG shots are more powerful
+        BURST_DELAY: 50,
+        DAMAGE_MULTIPLIER: 0.1,
+        BFG: {
+            PROJECTILE_SPEED: 3,  // Slower speed for BFG projectile
+            PROJECTILE_SIZE: 8,
+            TENDRIL_RANGE: 150,  // Range of damage tendrils
+            TENDRIL_COUNT: 8,    // Number of tendrils to draw
+            TENDRIL_DAMAGE_TICK: 100,  // How often tendrils deal damage (ms)
+            COLOR: {
+                PRIMARY: '#00ff00',    // Bright green
+                SECONDARY: '#88ff88',  // Light green
+                TENDRILS: '#00ff0088'  // Semi-transparent green
+            }
         }
     }
 };
@@ -35,29 +46,75 @@ function createDrone(index, totalDrones) {
     };
 }
 
-function fireDroneProjectile(drone, dronePos, targetPos, player) {
-    const baseAngle = Math.atan2(
+function fireBFGProjectile(drone, dronePos, targetPos, player) {
+    const angle = Math.atan2(
         targetPos.y - dronePos.y,
         targetPos.x - dronePos.x
     );
-    
-    // Add slight spread
-    const spread = (Math.random() - 0.5) * DRONE_CONFIG.ATTACK.PROJECTILE_SPREAD;
-    const angle = baseAngle + spread;
 
     projectiles.push({
         pos: { ...dronePos },
         vel: {
-            x: Math.cos(angle) * DRONE_CONFIG.PROJECTILE_SPEED,
-            y: Math.sin(angle) * DRONE_CONFIG.PROJECTILE_SPEED
+            x: Math.cos(angle) * DRONE_CONFIG.ATTACK.BFG.PROJECTILE_SPEED,
+            y: Math.sin(angle) * DRONE_CONFIG.ATTACK.BFG.PROJECTILE_SPEED
         },
         damage: player.projectileStrength * DRONE_CONFIG.ATTACK.DAMAGE_MULTIPLIER,
-        radius: 3,
-        color: DRONE_CONFIG.ATTACK.COLOR.PRIMARY,
+        radius: DRONE_CONFIG.ATTACK.BFG.PROJECTILE_SIZE,
+        isBFG: true,
+        lastTendrilDamage: Date.now(),
+        tendrilAngle: 0,  // For rotation effect
+        color: DRONE_CONFIG.ATTACK.BFG.COLOR.PRIMARY,
         isDroneProjectile: true,
-        trail: [], // Store positions for trail effect
-        maxTrailLength: 5
+        trail: [],
+        maxTrailLength: 8,
+        damageEnemies: new Set()  // Track which enemies were damaged this tick
     });
+}
+
+function updateBFGProjectile(p, player) {
+    // Update trail
+    p.trail.unshift({ x: p.pos.x, y: p.pos.y });
+    if (p.trail.length > p.maxTrailLength) {
+        p.trail.pop();
+    }
+
+    // Rotate tendril angle for visual effect
+    p.tendrilAngle += 0.05;
+
+    // Check for enemies in tendril range and damage them
+    const now = Date.now();
+    if (now - p.lastTendrilDamage >= DRONE_CONFIG.ATTACK.BFG.TENDRIL_DAMAGE_TICK) {
+        p.damageEnemies.clear();  // Reset damaged enemies list
+        
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const enemy = enemies[i];
+            const distance = getDistance(p.pos.x, p.pos.y, enemy.pos.x, enemy.pos.y);
+            if (distance <= DRONE_CONFIG.ATTACK.BFG.TENDRIL_RANGE && !p.damageEnemies.has(enemy)) {
+                // Deal damage to enemy
+                enemy.health -= p.damage;
+                p.damageEnemies.add(enemy);
+
+                // Create particle effect at the enemy's position
+                createExplosion(
+                    enemy.pos.x,
+                    enemy.pos.y,
+                    DRONE_CONFIG.ATTACK.BFG.COLOR.SECONDARY,
+                    3,
+                    false,
+                    true
+                );
+
+                // Check if enemy died from tendril damage
+                if (enemy.health <= 0) {
+                    handleEnemyDeath(enemy);  // This handles kill count
+                    enemies.splice(i, 1);
+                    addXP(1);  // Add XP for the kill
+                }
+            }
+        }
+
+        p.lastTendrilDamage = now;
+    }
 }
 
 export function updateDroneSwarm() {
@@ -107,7 +164,7 @@ export function updateDroneSwarm() {
         if (drone.burstCount > 0 && now - drone.lastBurstShot > DRONE_CONFIG.ATTACK.BURST_DELAY && drone.currentTarget) {
             // Check if the stored target still exists in the enemies array
             if (enemies.includes(drone.currentTarget)) {
-                fireDroneProjectile(drone, dronePos, drone.currentTarget.pos, player);
+                fireBFGProjectile(drone, dronePos, drone.currentTarget.pos, player);
             } else {
                 // If target no longer exists, cancel remaining burst
                 drone.burstCount = 0;
@@ -122,6 +179,13 @@ export function updateDroneSwarm() {
             }
         }
     });
+
+    // Update BFG projectiles
+    projectiles.forEach(p => {
+        if (p.isBFG) {
+            updateBFGProjectile(p, player);
+        }
+    });
 }
 
 export function drawDroneSwarm(ctx, camera) {
@@ -131,28 +195,101 @@ export function drawDroneSwarm(ctx, camera) {
     drones.forEach(drone => {
         const x = player.pos.x + Math.cos(drone.angle) * DRONE_CONFIG.ORBIT_RADIUS - camera.x;
         const y = player.pos.y + Math.sin(drone.angle) * DRONE_CONFIG.ORBIT_RADIUS - camera.y;
-        const rotationAngle = drone.angle + Math.PI / 2; // Make drone face perpendicular to orbit
+        const rotationAngle = drone.angle + Math.PI / 2;
 
-        // Save context for rotation
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(rotationAngle);
 
-        // Draw drone body
-        ctx.fillStyle = DRONE_CONFIG.ATTACK.COLOR.PRIMARY;
+        // Draw engine glow
+        const engineGlow = ctx.createRadialGradient(
+            -DRONE_CONFIG.SIZE.BODY * 0.7, 0, 0,
+            -DRONE_CONFIG.SIZE.BODY * 0.7, 0, DRONE_CONFIG.SIZE.ENGINE * 2
+        );
+        engineGlow.addColorStop(0, '#ff6600');
+        engineGlow.addColorStop(1, 'rgba(255, 102, 0, 0)');
+        
+        ctx.fillStyle = engineGlow;
         ctx.beginPath();
-        ctx.ellipse(0, 0, DRONE_CONFIG.SIZE.BODY, DRONE_CONFIG.SIZE.BODY * 0.6, 0, 0, Math.PI * 2);
+        ctx.arc(-DRONE_CONFIG.SIZE.BODY * 0.7, 0, DRONE_CONFIG.SIZE.ENGINE * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw main body (fuselage)
+        ctx.fillStyle = '#333333';
+        ctx.beginPath();
+        ctx.moveTo(-DRONE_CONFIG.SIZE.BODY, 0);  // Rear
+        ctx.lineTo(DRONE_CONFIG.SIZE.BODY * 0.5, -DRONE_CONFIG.SIZE.BODY * 0.4);  // Top front
+        ctx.lineTo(DRONE_CONFIG.SIZE.BODY * 0.5, DRONE_CONFIG.SIZE.BODY * 0.4);   // Bottom front
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw cockpit/sensor array
+        const cockpitGradient = ctx.createLinearGradient(
+            0, -DRONE_CONFIG.SIZE.BODY * 0.2,
+            DRONE_CONFIG.SIZE.BODY * 0.3, DRONE_CONFIG.SIZE.BODY * 0.2
+        );
+        cockpitGradient.addColorStop(0, '#00ff00');
+        cockpitGradient.addColorStop(1, '#003300');
+        
+        ctx.fillStyle = cockpitGradient;
+        ctx.beginPath();
+        ctx.ellipse(
+            DRONE_CONFIG.SIZE.BODY * 0.2, 0,
+            DRONE_CONFIG.SIZE.BODY * 0.3, DRONE_CONFIG.SIZE.BODY * 0.2,
+            0, 0, Math.PI * 2
+        );
         ctx.fill();
 
         // Draw wings
-        ctx.fillRect(-DRONE_CONFIG.SIZE.WING * 1.5, -DRONE_CONFIG.SIZE.WING, DRONE_CONFIG.SIZE.WING * 3, 2);
-        ctx.fillRect(-DRONE_CONFIG.SIZE.WING * 1.5, DRONE_CONFIG.SIZE.WING, DRONE_CONFIG.SIZE.WING * 3, 2);
-
-        // Draw energy field
-        ctx.strokeStyle = DRONE_CONFIG.ATTACK.COLOR.TRAIL;
+        ctx.fillStyle = '#444444';
+        // Left wing
         ctx.beginPath();
-        ctx.arc(0, 0, DRONE_CONFIG.SIZE.BODY + 4, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.moveTo(-DRONE_CONFIG.SIZE.BODY * 0.5, 0);
+        ctx.lineTo(-DRONE_CONFIG.SIZE.BODY * 0.3, -DRONE_CONFIG.SIZE.WING * 1.5);
+        ctx.lineTo(DRONE_CONFIG.SIZE.BODY * 0.3, -DRONE_CONFIG.SIZE.WING);
+        ctx.lineTo(DRONE_CONFIG.SIZE.BODY * 0.3, 0);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(-DRONE_CONFIG.SIZE.BODY * 0.5, 0);
+        ctx.lineTo(-DRONE_CONFIG.SIZE.BODY * 0.3, DRONE_CONFIG.SIZE.WING * 1.5);
+        ctx.lineTo(DRONE_CONFIG.SIZE.BODY * 0.3, DRONE_CONFIG.SIZE.WING);
+        ctx.lineTo(DRONE_CONFIG.SIZE.BODY * 0.3, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw weapon mounts
+        ctx.fillStyle = DRONE_CONFIG.ATTACK.BFG.COLOR.PRIMARY;
+        [-1, 1].forEach(side => {
+            ctx.beginPath();
+            ctx.arc(
+                0,
+                side * DRONE_CONFIG.SIZE.WING * 0.8,
+                DRONE_CONFIG.SIZE.WEAPON,
+                0, Math.PI * 2
+            );
+            ctx.fill();
+
+            // Add weapon glow
+            const weaponGlow = ctx.createRadialGradient(
+                0, side * DRONE_CONFIG.SIZE.WING * 0.8, 0,
+                0, side * DRONE_CONFIG.SIZE.WING * 0.8, DRONE_CONFIG.SIZE.WEAPON * 1.5
+            );
+            weaponGlow.addColorStop(0, DRONE_CONFIG.ATTACK.BFG.COLOR.PRIMARY + '44');
+            weaponGlow.addColorStop(1, 'rgba(0, 255, 0, 0)');
+            
+            ctx.fillStyle = weaponGlow;
+            ctx.beginPath();
+            ctx.arc(
+                0,
+                side * DRONE_CONFIG.SIZE.WING * 0.8,
+                DRONE_CONFIG.SIZE.WEAPON * 1.5,
+                0, Math.PI * 2
+            );
+            ctx.fill();
+        });
 
         ctx.restore();
     });
