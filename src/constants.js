@@ -76,6 +76,21 @@ export const ENEMY_TYPES = {
                 DAMAGE: 3
             }
         }
+    },
+    ARSENAL_BOSS: {
+        SPEED: 1.5,
+        HEALTH: 150,
+        DAMAGE: 20,
+        RADIUS: 35,
+        EXP: 15
+    },
+    ARSENAL_TURRET: {
+        SPEED: 0,
+        HEALTH: 15,
+        DAMAGE: 5,
+        RADIUS: 15,
+        EXP: 2,
+        SHOOT_COOLDOWN: 2000
     }
 };
 
@@ -104,7 +119,7 @@ export const PROJECTILE = {
 
 // Wave Settings
 export const WAVE = {
-    INITIAL_ENEMY_COUNT: 50,
+    INITIAL_ENEMY_COUNT: 10,
     ENEMY_COUNT_INCREMENT: 2,
     TANK_SPAWN_CHANCE_BASE: 0.2,
     TANK_SPAWN_CHANCE_INCREMENT: 0.02,
