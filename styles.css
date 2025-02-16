@@ -24,6 +24,14 @@ canvas {
     font-weight: bold;
 }
 
+#ui .mobile-only {
+    display: none;
+}
+
+#ui .desktop-only {
+    display: block;
+}
+
 /* Restart Button */
 #restartButton {
     position: absolute;
@@ -263,4 +271,347 @@ canvas {
 
 #close-stats:hover {
     color: #ff5252;
+}
+
+/* Mobile Adaptations */
+@media (max-width: 768px) {
+    canvas {
+        border: none;
+        width: 100vw;
+        height: 100vh;
+        touch-action: none; /* Prevent default touch actions */
+    }
+
+    #ui {
+        max-width: none;
+        font-size: 14px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 5px 10px;
+        border-radius: 5px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    #ui .desktop-only {
+        display: none;
+    }
+
+    #ui .mobile-only {
+        display: block;
+    }
+
+    #weapons-ui {
+        left: 10px;
+        transform: translateY(-50%) scale(0.25);
+        transform-origin: left center;
+        width: 15px;  /* This helps prevent the scaled-down UI from taking too much space */
+        overflow: visible;  /* Allow the transformed content to be visible */
+    }
+
+    #ui {
+        font-size: 14px;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 5px;
+        border-radius: 5px;
+        right: 10px;
+    }
+
+    #weapons-ui {
+        display: none; /* Hide desktop weapon UI on mobile */
+    }
+
+    #waveInfo {
+        font-size: 14px;
+        top: 10px;
+    }
+
+    /* Make stats menu more touch-friendly */
+    #stats-menu {
+        width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .stat-row {
+        padding: 15px; /* Larger touch targets */
+    }
+
+    .stat-button {
+        padding: 10px 20px; /* Larger touch targets */
+        font-size: 16px;
+    }
+
+    #close-stats {
+        padding: 15px; /* Larger touch target */
+    }
+}
+
+/* Ensure canvas takes up full screen on mobile */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+}
+
+/* Device-specific visibility */
+.mobile-controls {
+    display: none;
+}
+
+.keyboard-controls {
+    display: block;
+}
+
+/* Hide keyboard hints on mobile */
+@media (max-width: 768px) {
+    .keyboard-controls {
+        display: none;
+    }
+
+    .mobile-controls {
+        display: block;
+    }
+
+    #ui {
+        max-width: 120px; /* Make UI more compact on mobile */
+        font-size: 12px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 5px;
+        border-radius: 5px;
+    }
+
+    #waveInfo {
+        width: auto;
+        max-width: 150px;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    /* Make stats menu more touch-friendly */
+    #stats-menu {
+        width: 90%;
+        max-width: none;
+        padding: 15px;
+    }
+
+    .stat-button {
+        min-width: 80px;
+        min-height: 40px;
+    }
+
+    /* Hide desktop weapon UI */
+    #weapons-ui {
+        display: none;
+    }
+
+    /* Make intro screen more mobile-friendly */
+    #intro-screen {
+        width: 90%;
+        max-width: none;
+        padding: 15px;
+    }
+
+    #intro-screen .controls {
+        font-size: 14px;
+    }
+
+    #start-button {
+        padding: 15px 40px;
+        font-size: 18px;
+    }
+}
+
+.keyboard-controls, .mobile-controls {
+    display: none;
+}
+
+#intro-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    border: 2px solid white;
+    text-align: center;
+    max-width: 500px;
+}
+
+@media (max-width: 768px) {
+    #intro-screen {
+        width: auto;
+        max-width: none;
+        padding: 20px;
+    }
+
+    #intro-screen .controls {
+        display: none; /* Hide all controls on mobile */
+    }
+
+    #intro-screen h1 {
+        font-size: 24px;
+        margin: 0 0 20px 0;
+    }
+
+    #start-button {
+        padding: 20px 40px;
+        font-size: 20px;
+        margin: 0;
+    }
+}
+
+/* Additional styles for landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    #intro-screen {
+        padding: 10px 20px;
+    }
+
+    #intro-screen h1 {
+        font-size: 20px;
+        margin: 0 0 10px 0;
+    }
+
+    #start-button {
+        padding: 10px 30px;
+    }
+}
+
+/* Hide elements on mobile in both portrait and landscape */
+@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
+    .keyboard-controls {
+        display: none;
+    }
+
+    .mobile-controls {
+        display: block;
+    }
+
+    #ui .desktop-only {
+        display: none !important;
+    }
+
+    #ui .mobile-only {
+        display: block;
+    }
+
+    #ui {
+        max-width: 120px;
+        font-size: 12px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 5px;
+        border-radius: 5px;
+        z-index: 100;
+    }
+
+    #waveInfo {
+        width: auto;
+        max-width: 150px;
+        padding: 5px;
+        font-size: 12px;
+        z-index: 100;
+    }
+
+    /* Hide desktop weapon UI */
+    #weapons-ui {
+        display: none !important;
+    }
+
+    /* Make intro screen more mobile-friendly */
+    #intro-screen {
+        width: 90%;
+        max-width: none;
+        padding: 15px;
+    }
+
+    #intro-screen .controls {
+        display: none;
+    }
+
+    #intro-screen h1 {
+        font-size: 24px;
+        margin: 0 0 20px 0;
+    }
+}
+
+/* Additional adjustments for landscape orientation */
+@media (orientation: landscape) and (max-height: 768px) {
+    #intro-screen {
+        padding: 10px 20px;
+        width: auto;
+        max-height: 90vh;
+    }
+
+    #intro-screen h1 {
+        font-size: 20px;
+        margin: 0 0 10px 0;
+    }
+
+    #start-button {
+        padding: 10px 30px;
+    }
+
+    /* Ensure UI elements don't overlap in landscape */
+    #ui {
+        top: 5px;
+        right: 5px;
+    }
+
+    #waveInfo {
+        top: 5px;
+    }
+}
+
+@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
+    /* ...existing mobile styles... */
+
+    #stats-menu {
+        position: fixed;
+        width: 70vw;     /* Reduced from 85vw */
+        max-width: 300px; /* Add max-width to prevent it from being too wide */
+        max-height: 80vh;
+        min-width: auto;
+        padding: 15px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        left: 10px;     /* Position from left instead of right */
+        transform: translateY(-50%); /* Only center vertically */
+        right: auto;      /* Remove right positioning */
+    }
+
+    .stat-row {
+        padding: 10px;   /* Reduced padding */
+        margin: 6px 0;   /* Reduced margin */
+        font-size: 14px; /* Slightly smaller font */
+    }
+
+    .stat-button {
+        padding: 8px 16px;
+        min-width: 60px; /* Reduced min-width */
+        font-size: 14px;
+    }
+
+    #stats-menu h2 {
+        font-size: 16px;
+        margin: 0 0 12px 0;
+    }
+
+    .stat-points {
+        font-size: 14px;
+        margin: 8px 0;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        margin-right: 8px;  /* Add margin to separate from value */
+    }
+
+    .stat-value {
+        margin: 0 8px;   /* Reduced margins */
+        min-width: 50px; /* Ensure consistent width for values */
+        text-align: right;
+    }
 }

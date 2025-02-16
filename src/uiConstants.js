@@ -10,6 +10,7 @@ export const UI_ELEMENTS = {
     waveCounter: document.getElementById("waveCounter"),
     waveTimer: document.getElementById("waveTimer"),
     restartButton: document.getElementById("restartButton"),
+    
     // Stats menu elements
     statsMenu: document.getElementById("stats-menu"),
     availablePoints: document.getElementById("available-points"),
@@ -19,5 +20,10 @@ export const UI_ELEMENTS = {
     currentProjectiles: document.getElementById("current-projectiles"),
     currentMoveSpeed: document.getElementById("current-move-speed"),
     closeStats: document.getElementById("close-stats"),
-    statButtons: document.querySelectorAll(".stat-button")
+    statButtons: document.querySelectorAll(".stat-button"),
+
+    // Mobile UI elements
+    mobileHealthCounter: document.getElementById("mobileHealthCounter"),
+    mobileLevelInfo: document.getElementById("mobileLevelInfo"),
+    mobileStatsAvailable: document.getElementById("mobileStatsAvailable")
 };

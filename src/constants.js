@@ -143,3 +143,29 @@ export const UI = {
     XP_BAR_WIDTH: 100,
     XP_BAR_HEIGHT: 10
 };
+
+export const VIRTUAL_JOYSTICK = {
+    OUTER_RADIUS: 80,
+    INNER_RADIUS: 30,
+    POSITION: {
+        LEFT: 100,
+        BOTTOM: 100
+    },
+    OPACITY: 0.5
+};
+
+export const MOBILE_UI = {
+    WEAPON_BUTTON: {
+        SIZE: 60,
+        SPACING: 20,
+        BOTTOM: 100,
+        RIGHT: 40,
+        OPACITY: 0.7
+    },
+    STATS_BUTTON: {
+        SIZE: 60,  // Increased from 50
+        TOP: 80,   // Increased from 20
+        RIGHT: 20,
+        OPACITY: 0.8  // Increased from 0.7
+    }
+};

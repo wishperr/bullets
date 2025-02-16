@@ -55,3 +55,27 @@ export function pointToLineDistance(point, lineStart, lineEnd) {
 
     return Math.sqrt(dx * dx + dy * dy);
 }
+
+export function isMobileDevice() {
+    return (window.innerWidth <= 768) || 
+           ('ontouchstart' in window) ||
+           (navigator.maxTouchPoints > 0);
+}
+
+export function adjustIntroScreen() {
+    const isMobile = isMobileDevice();
+    const introScreen = document.querySelector('#intro-screen');
+    const controls = document.querySelector('.controls');
+
+    if (introScreen && isMobile) {
+        controls.style.display = 'none';
+        introScreen.classList.add('mobile-view');
+    }
+}
+
+// Watch for orientation changes on mobile
+if (isMobileDevice()) {
+    window.addEventListener('orientationchange', () => {
+        adjustIntroScreen();
+    });
+}

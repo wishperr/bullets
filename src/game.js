@@ -11,6 +11,8 @@ import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
 import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
 import { spawnWaveEnemies } from './systems/waveSystem.js';
+import { initTouchControls, drawTouchControls } from './systems/touchControlSystem.js';
+import { isMobileDevice, adjustIntroScreen } from './utils.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -80,10 +82,39 @@ function updateProjectileInterval() {
 }
 
 export function initializeGame() {
+    // Set up mobile viewport and UI
+    adjustCanvasForMobile();
+    adjustIntroScreen();
+    
     initializePlayer();
+    initTouchControls(canvas);
+    initStatsMenu(); // Initialize stats menu handlers
     spawnWaveEnemies(1); // Pass wave number 1 explicitly
     startWave();
     updateProjectileInterval();
+}
+
+function adjustCanvasForMobile() {
+    // Make canvas responsive
+    function resizeCanvas() {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        // Set canvas size to window size for mobile
+        canvas.width = windowWidth;
+        canvas.height = windowHeight;
+        
+        // Update camera dimensions
+        camera.width = windowWidth;
+        camera.height = windowHeight;
+        
+        // Readjust UI for new screen size
+        adjustIntroScreen();
+    }
+
+    // Initial resize and add listener for orientation changes
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 }
 
 function updateCamera() {
@@ -312,4 +343,7 @@ function draw() {
     });
 
     drawPowerups(ctx, camera);
+    
+    // Draw touch controls on top
+    drawTouchControls(ctx);
 }

@@ -14,6 +14,7 @@ export function updateUI(killCount, xp, level, xpToNextLevel, health) {
     
     // Update other stats only if they're provided
     if (player) {
+        // Desktop UI updates
         UI_ELEMENTS.xpCounter.innerText = `⭐ XP: ${player.xp} / ${player.xpToNextLevel}`;
         UI_ELEMENTS.levelCounter.innerText = `📈 Level: ${player.level}${player.statPoints > 0 ? ` (Press C: ${player.statPoints} points available)` : ''}`;
         
@@ -28,6 +29,20 @@ export function updateUI(killCount, xp, level, xpToNextLevel, health) {
         UI_ELEMENTS.movementSpeedCounter.innerText = `🏃 Movement Speed: ${player.speed}`;
         UI_ELEMENTS.projectileStrengthCounter.innerText = `💥 Projectile Strength: ${player.projectileStrength}`;
         UI_ELEMENTS.additionalProjectilesCounter.innerText = `🎯 Additional Projectiles: ${player.additionalProjectiles}`;
+
+        // Mobile UI updates
+        if (UI_ELEMENTS.mobileHealthCounter) {
+            UI_ELEMENTS.mobileHealthCounter.innerText = `❤️ ${player.health}${invincibilityText}`;
+        }
+        if (UI_ELEMENTS.mobileLevelInfo) {
+            UI_ELEMENTS.mobileLevelInfo.innerText = `📈 Lvl ${player.level} (⭐ ${player.xp})`;
+        }
+        if (UI_ELEMENTS.mobileStatsAvailable && player.statPoints > 0) {
+            UI_ELEMENTS.mobileStatsAvailable.innerText = `🔰 ${player.statPoints}`;
+            UI_ELEMENTS.mobileStatsAvailable.style.display = 'block';
+        } else if (UI_ELEMENTS.mobileStatsAvailable) {
+            UI_ELEMENTS.mobileStatsAvailable.style.display = 'none';
+        }
     }
 }
 

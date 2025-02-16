@@ -1,6 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, PLAYER } from './constants.js';
 import { getDistance } from './utils.js';
 import { showStatsMenu } from './statsMenu.js';
+import { getMoveVector } from './systems/touchControlSystem.js';
 
 const weapons = ["shotgun", "laser", "rockets", "chainLightning"];
 let currentWeaponIndex = 0;
@@ -45,10 +46,38 @@ function levelUp() {
 }
 
 export function handlePlayerMovement() {
-    if (keys.w && player.pos.y > 0) player.pos.y -= player.speed;
-    if (keys.s && player.pos.y < GAME_HEIGHT - player.radius * 2) player.pos.y += player.speed;
-    if (keys.a && player.pos.x > 0) player.pos.x -= player.speed;
-    if (keys.d && player.pos.x < GAME_WIDTH - player.radius * 2) player.pos.x += player.speed;
+    // Handle keyboard input
+    let dx = 0;
+    let dy = 0;
+    
+    if (keys.w) dy -= 1;
+    if (keys.s) dy += 1;
+    if (keys.a) dx -= 1;
+    if (keys.d) dx += 1;
+
+    // Get touch input
+    const touchVector = getMoveVector();
+    dx += touchVector.x;
+    dy += touchVector.y;
+
+    // Normalize diagonal movement
+    if (dx !== 0 && dy !== 0) {
+        const length = Math.sqrt(dx * dx + dy * dy);
+        dx /= length;
+        dy /= length;
+    }
+
+    // Apply movement
+    const newX = player.pos.x + dx * player.speed;
+    const newY = player.pos.y + dy * player.speed;
+
+    // Check boundaries
+    if (newX > 0 && newX < GAME_WIDTH - player.radius * 2) {
+        player.pos.x = newX;
+    }
+    if (newY > 0 && newY < GAME_HEIGHT - player.radius * 2) {
+        player.pos.y = newY;
+    }
 }
 
 export function switchWeapon(direction) {
@@ -66,6 +95,24 @@ function updateWeaponUI() {
         }
     });
 }
+
+// Add touch gesture for weapon switching
+let touchStartX = 0;
+const SWIPE_THRESHOLD = 50;
+
+window.addEventListener("touchstart", (e) => {
+    touchStartX = e.touches[0].clientX;
+});
+
+window.addEventListener("touchend", (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const swipeDistance = touchEndX - touchStartX;
+    
+    if (Math.abs(swipeDistance) > SWIPE_THRESHOLD) {
+        // Swipe right switches to next weapon, swipe left to previous
+        switchWeapon(swipeDistance > 0 ? 1 : -1);
+    }
+});
 
 window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() in keys) {

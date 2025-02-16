@@ -2,6 +2,41 @@ import { getPlayer } from './player.js';
 import { pauseGame, resumeGame } from './game.js';
 import { UI_ELEMENTS } from './uiConstants.js';
 
+export function initStatsMenu() {
+    // Initialize stat button handlers
+    UI_ELEMENTS.statButtons.forEach(button => {
+        button.onclick = () => {
+            const player = getPlayer();
+            if (!player) return;
+            
+            const stat = button.dataset.stat;
+            if (handleStatUpgrade(stat, player)) {
+                updateStatDisplay(player);
+                UI_ELEMENTS.statButtons.forEach(btn => btn.disabled = player.statPoints <= 0);
+            }
+        };
+    });
+
+    // Initialize close button handler
+    if (UI_ELEMENTS.closeStats) {
+        UI_ELEMENTS.closeStats.onclick = () => hideStatsMenu();
+    }
+}
+
+export function toggleStatsMenu() {
+    const statsMenu = UI_ELEMENTS.statsMenu;
+    if (statsMenu.style.display === 'block') {
+        hideStatsMenu();
+    } else {
+        showStatsMenu();
+    }
+}
+
+function hideStatsMenu() {
+    UI_ELEMENTS.statsMenu.style.display = 'none';
+    resumeGame();
+}
+
 export function showStatsMenu() {
     const player = getPlayer();
     const statsMenu = UI_ELEMENTS.statsMenu;
@@ -41,7 +76,7 @@ function updateStatDisplay(player) {
     UI_ELEMENTS.currentMoveSpeed.textContent = player.speed.toFixed(1);
 }
 
-function handleStatUpgrade(stat, player) {
+export function handleStatUpgrade(stat, player) {
     if (player.statPoints <= 0) return false;
 
     switch(stat) {

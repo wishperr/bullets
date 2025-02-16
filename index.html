@@ -11,30 +11,46 @@
         <h1>Bullet Survivors</h1>
         <div class="controls">
             <h2>Controls</h2>
-            <p>Movement: <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span></p>
-            <p>Switch Weapons: <span class="key">Q</span> previous, <span class="key">E</span> next</p>
-            <p>Stats menu: <span class="key">C</span>
-            <p>Available Weapons:</p>
-            <ul>
-                <li>Shotgun - Spread shot</li>
-                <li>Laser - Pierce through enemies</li>
-                <li>Rockets - Splash damage!</li>
-                <li>Chain Lightning - Chain damage between enemies</li>
-            </ul>
+            <div class="keyboard-controls">
+                <p>Movement: <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span></p>
+                <p>Switch Weapons: <span class="key">Q</span> previous, <span class="key">E</span> next</p>
+                <p>Stats menu: <span class="key">C</span></p>
+            </div>
+            <div class="mobile-controls">
+                <p>Movement: Use the virtual joystick on the left side</p>
+                <p>Switch Weapons: Use the arrow buttons on the right side</p>
+                <p>Stats menu: Use the stats button in top-right corner</p>
+            </div>
+            <div class="common-info">
+                <p>Available Weapons:</p>
+                <ul>
+                    <li>Shotgun - Spread shot</li>
+                    <li>Laser - Pierce through enemies</li>
+                    <li>Rockets - Splash damage!</li>
+                    <li>Chain Lightning - Chain damage between enemies</li>
+                </ul>
+            </div>
         </div>
         <button id="start-button">Start Game</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
     <div id="ui">
-        <p id="killCounter">Kills: 0</p>
-        <p id="xpCounter">XP: 0 / 5</p>
-        <p id="levelCounter">Level: 1</p>
-        <p id="attackSpeedCounter">Attack Speed: 2000ms</p>
-        <p id="movementSpeedCounter">Movement Speed: 3</p>
-        <p id="projectileStrengthCounter">Projectile Strength: 1</p>
-        <p id="additionalProjectilesCounter">Additional Projectiles: 0</p>
-        <p id="healthCounter">Health: 1</p>
+        <div class="desktop-only">
+            <p id="killCounter">💀 Kills: 0</p>
+            <p id="xpCounter">⭐ XP: 0 / 5</p>
+            <p id="levelCounter">📈 Level: 1</p>
+            <p id="attackSpeedCounter">⚡ Attack Speed: 2000ms</p>
+            <p id="movementSpeedCounter">🏃 Movement Speed: 3</p>
+            <p id="projectileStrengthCounter">💥 Projectile Strength: 1</p>
+            <p id="additionalProjectilesCounter">🎯 Additional Projectiles: 0</p>
+        </div>
+        <div class="mobile-only mobile-stats">
+            <p id="mobileHealthCounter">❤️ 50</p>
+            <p id="mobileLevelInfo">📈 Lvl 1 (⭐ 0)</p>
+            <p id="mobileStatsAvailable">🔰 0</p>
+        </div>
+        <p id="healthCounter" class="desktop-only">❤️ Health: 1</p>
         <button id="restartButton" style="display: none;">Restart</button>
     </div>
     <div id="waveInfo">
