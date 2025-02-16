@@ -73,18 +73,18 @@ function handlePlayerProjectileCollision(projectile, projectileIndex) {
     for (let j = enemies.length - 1; j >= 0; j--) {
         const enemy = enemies[j];
         const distance = getDistance(projectile.pos.x, projectile.pos.y, enemy.pos.x, enemy.pos.y);
-
         if (distance < enemy.radius + projectile.radius) {
             if (projectile.isRocket) {
                 handleRocketCollision(projectile, j, handleEnemyDeath);
-            } else {
+                projectiles.splice(projectileIndex, 1);
+            } else if (!projectile.isBFG) {  // Don't destroy BFG projectiles on collision
                 enemy.health -= projectile.damage;
                 if (enemy.health <= 0) {
                     handleEnemyDeath(enemy);
                     enemies.splice(j, 1);
                 }
+                projectiles.splice(projectileIndex, 1);
             }
-            projectiles.splice(projectileIndex, 1);
             break;
         }
     }

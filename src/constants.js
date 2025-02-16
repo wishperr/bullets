@@ -3,7 +3,7 @@
 // Game Settings
 export const GAME_WIDTH = 3000;
 export const GAME_HEIGHT = 3000;
-export const WAVE_SPAWN_RATE = 20000; // Time in milliseconds between waves
+export const WAVE_SPAWN_RATE = 30000; // Time in milliseconds between waves
 
 // Viewpoint/camera settings
 export const CAMERA = {
