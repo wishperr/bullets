@@ -11,6 +11,7 @@ import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
 import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
 import { spawnWaveEnemies } from './systems/waveSystem.js';
+import { updateDroneSwarm, drawDroneSwarm } from './weapons/systems/droneSwarmSystem.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -101,6 +102,7 @@ export function gameLoop() {
     updateProjectiles();
     updateEnemies();
     updateParticles();
+    updateDroneSwarm();  // Add drone swarm update
     updateCamera();
     updatePowerups();
 
@@ -191,6 +193,7 @@ function draw() {
     
     drawProjectiles(ctx, camera);
     drawParticles(ctx, camera);
+    drawDroneSwarm(ctx, camera);  // Add drone swarm drawing
 
     enemies.forEach(e => {
         if (e.type === "arsenal_boss") {

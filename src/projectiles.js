@@ -33,6 +33,7 @@ export function shootProjectiles() {
             const shotgunProjectiles = shootShotgun(player, closestEnemy);
             projectiles.push(...shotgunProjectiles);
             break;
+        // Drone swarm doesn't need this as it handles its own shooting
     }
 }
 
@@ -46,6 +47,14 @@ export function updateProjectiles() {
         
         if (p.isRocket) {
             createRocketTrail(p.pos);
+        }
+
+        // Update drone projectile trails
+        if (p.isDroneProjectile) {
+            p.trail.unshift({ x: p.pos.x, y: p.pos.y });
+            if (p.trail.length > p.maxTrailLength) {
+                p.trail.pop();
+            }
         }
 
         p.pos.x += p.vel.x;
@@ -85,6 +94,26 @@ export function drawProjectiles(ctx, camera) {
                 
                 // Reset transformations
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
+            } else if (p.isDroneProjectile) {
+                // Draw drone projectile trail
+                if (p.trail.length > 1) {
+                    ctx.strokeStyle = p.color + '44';
+                    ctx.lineWidth = p.radius * 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(p.trail[0].x - camera.x, p.trail[0].y - camera.y);
+                    for (let i = 1; i < p.trail.length; i++) {
+                        ctx.lineTo(p.trail[i].x - camera.x, p.trail[i].y - camera.y);
+                    }
+                    ctx.stroke();
+                }
+
+                // Draw drone projectile
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(p.pos.x - camera.x, p.pos.y - camera.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
             } else {
                 ctx.fillStyle = p.enemyShot ? "cyan" : "white";
                 ctx.shadowColor = p.enemyShot ? "cyan" : "red";
