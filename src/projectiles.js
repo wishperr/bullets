@@ -13,6 +13,13 @@ import { shootShotgun } from './weapons/systems/shotgunSystem.js';
 export { laserBeams, rocketTrails, lightningChains, lightningVictims };
 export let projectiles = [];
 
+// Add camera reference
+let gameCamera;
+
+export function setCamera(camera) {
+    gameCamera = camera;
+}
+
 export function shootProjectiles() {
     const player = getPlayer();
     if (!player) return;
@@ -22,7 +29,7 @@ export function shootProjectiles() {
 
     switch(player.weapon) {
         case "laser":
-            shootLaser(player, closestEnemy);
+            shootLaser(player, closestEnemy, gameCamera);  // Use the stored camera reference
             break;
         case "rockets":
             const rocket = shootRocket(player, closestEnemy);
