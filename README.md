@@ -1,6 +1,6 @@
-Bullet Survivors is a simple PoC bullet-hell survival game where you fend off waves of enemies, level up, and upgrade your character to survive as long as possible.  
+Bullet Survivors is a simple PoC bullet-hell survival game where you fight off waves of enemies, level up, and upgrade your character to survive as long as possible.  
   
-Features  
+Features:  
 
   Game Field: Large game field with dynamic camera movement.  
 
@@ -10,7 +10,7 @@ Features
 
   Weapons: Switch between different weapons including Shotgun, Laser, Rockets, Chain Lightning and BFG drones.  
 
-  Enemies: Face various enemy types:  
+  Enemies:
   - Normal  
   - Tank  
   - Shooters  
