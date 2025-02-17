@@ -12,6 +12,54 @@ import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common
 import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
 import { spawnWaveEnemies } from './systems/waveSystem.js';
 
+// Add these exports at the top
+export function getEnemies() {
+    return enemies;
+}
+
+export function getProjectiles() {
+    return projectiles;
+}
+
+export function getWaveNumber() {
+    return waveNumber;
+}
+
+export function getNextWaveTime() {
+    return nextWaveTime;
+}
+
+export function syncGameState(state) {
+    if (!state) return;
+    
+    // Sync enemies
+    if (state.enemies) {
+        enemies.length = 0;
+        enemies.push(...state.enemies);
+    }
+    
+    // Sync projectiles
+    if (state.projectiles) {
+        projectiles.length = 0;
+        projectiles.push(...state.projectiles);
+    }
+    
+    // Sync wave info
+    if (state.waveNumber !== undefined) {
+        waveNumber = state.waveNumber;
+        updateWaveUI(waveNumber);
+    }
+    
+    if (state.nextWaveTime !== undefined) {
+        nextWaveTime = state.nextWaveTime;
+    }
+    
+    // Sync pause state
+    if (state.isPaused !== undefined && state.isPaused !== gamePaused) {
+        state.isPaused ? pauseGame() : resumeGame();
+    }
+}
+
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -30,25 +78,34 @@ let nextWaveTime;
 export let gamePaused = false;
 let pauseStartTime = 0;  // Track when the game was paused
 
+// Add this to register the multiplayer manager
+let multiplayerManager = null;
+export function registerMultiplayerManager(manager) {
+    multiplayerManager = manager;
+}
+
 function startWave() {
     nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
 
-    setInterval(() => {
-        if (!gameOver && !gamePaused) {
-            // Check if there's any type of boss alive
-            const bossAlive = enemies.some(e => e.type === "boss" || e.type === "arsenal_boss");
-            
-            if (Date.now() >= nextWaveTime && !bossAlive) {
-                waveNumber++;
-                enemySpawnRate = Math.max(500, enemySpawnRate - 200);
-                spawnWaveEnemies(waveNumber);
-                updateWaveUI(waveNumber);
-                nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
+    // Only the host should handle wave spawning
+    if (!multiplayerManager?.isMultiplayerGame || multiplayerManager?.isHost) {
+        setInterval(() => {
+            if (!gameOver && !gamePaused) {
+                // Check if there's any type of boss alive
+                const bossAlive = enemies.some(e => e.type === "boss" || e.type === "arsenal_boss");
+                
+                if (Date.now() >= nextWaveTime && !bossAlive) {
+                    waveNumber++;
+                    enemySpawnRate = Math.max(500, enemySpawnRate - 200);
+                    spawnWaveEnemies(waveNumber);
+                    updateWaveUI(waveNumber);
+                    nextWaveTime = Date.now() + WAVE_SPAWN_RATE;
+                }
             }
-        }
-    }, 1000);
+        }, 1000);
+    }
 
-    // Update wave timer every second
+    // Everyone updates their wave timer display
     setInterval(() => {
         if (!gameOver && !gamePaused) {
             const bossAlive = enemies.some(e => e.type === "boss" || e.type === "arsenal_boss");
@@ -97,25 +154,26 @@ function updateCamera() {
 export function gameLoop() {
     if (gameOver || gamePaused) return;
 
-    handlePlayerMovement(); // This is imported from player.js
+    handlePlayerMovement();
     updateProjectiles();
     updateEnemies();
     updateParticles();
     updateCamera();
     updatePowerups();
 
-    if (enemyInView()) {
-        if (!projectileInterval) updateProjectileInterval();
-    } else if (projectileInterval) {
-        clearInterval(projectileInterval);
-        projectileInterval = null;
-    }
-
-    // Use the centralized collision system
-    if (handleCollisions()) {
-        gameOver = true;
-        stopGame();
-        return;
+    // Send player state in multiplayer more frequently
+    if (multiplayerManager?.isMultiplayerGame) {
+        const player = getPlayer();
+        if (player) {
+            multiplayerManager.sendGameState({
+                id: player.id,
+                pos: { ...player.pos }, // Make sure to clone the position
+                radius: player.radius,
+                health: player.health,
+                level: player.level,
+                weapon: player.weapon
+            });
+        }
     }
 
     draw();
@@ -173,20 +231,38 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
 
-    const player = getPlayer();
-    if (player) {
-        ctx.fillStyle = "blue";
-        ctx.beginPath();
-        ctx.arc(player.pos.x - camera.x, player.pos.y - camera.y, player.radius, 0, Math.PI * 2);
-        ctx.fill();
+    // Draw other players first (behind the main player)
+    if (multiplayerManager?.isMultiplayerGame) {
+        multiplayerManager.drawOtherPlayers(ctx, camera);
     }
 
-    if (player.invincible) {
-        ctx.strokeStyle = "cyan";
-        ctx.lineWidth = 3;
+    const player = getPlayer();
+    if (player) {
+        // Draw main player
+        ctx.fillStyle = "blue";
         ctx.beginPath();
-        ctx.arc(player.pos.x - camera.x, player.pos.y - camera.y, player.radius + 10, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(
+            player.pos.x - camera.x, 
+            player.pos.y - camera.y, 
+            player.radius, 
+            0, 
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        if (player.invincible) {
+            ctx.strokeStyle = "cyan";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(
+                player.pos.x - camera.x, 
+                player.pos.y - camera.y, 
+                player.radius + 10, 
+                0, 
+                Math.PI * 2
+            );
+            ctx.stroke();
+        }
     }
     
     drawProjectiles(ctx, camera);
@@ -312,4 +388,8 @@ function draw() {
     });
 
     drawPowerups(ctx, camera);
+}
+
+export function getPlayerProjectiles() {
+    return projectiles.filter(p => p.fromPlayer);
 }

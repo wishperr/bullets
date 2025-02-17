@@ -1,3 +1,7 @@
+import { initializeGame, gameLoop, syncGameState, getEnemies, getProjectiles, getWaveNumber, getNextWaveTime, pauseGame, resumeGame, getPlayerProjectiles } from './game.js';
+import { getPlayer } from './player.js';
+import { projectiles } from './projectiles.js';
+
 export class MultiplayerManager {
     constructor() {
         this.ws = null;
@@ -13,6 +17,7 @@ export class MultiplayerManager {
             gameTime: 0
         };
         this.isPaused = false;
+        this.syncInterval = null;
         this.setupEventListeners();
     }
 
@@ -50,10 +55,15 @@ export class MultiplayerManager {
                 this.startGame();
             }
         });
+
+        // Update the start game button visibility logic
+        document.getElementById('start-game-button').style.display = 'none';
     }
 
     connect() {
-        this.ws = new WebSocket('ws://192.168.3.24:3000');
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        this.ws = new WebSocket(wsUrl);
         
         this.ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -63,6 +73,10 @@ export class MultiplayerManager {
         this.ws.onclose = () => {
             console.log('Disconnected from server');
             // Handle reconnection logic here if needed
+        };
+
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
         };
     }
 
@@ -74,7 +88,7 @@ export class MultiplayerManager {
                 document.getElementById('menu-screen').style.display = 'none';
                 document.getElementById('lobby-screen').style.display = 'block';
                 document.getElementById('lobby-code-display').textContent = `Lobby Code: ${data.lobbyCode}`;
-                document.getElementById('start-game-button').style.display = 'none';
+                document.getElementById('start-game-button').style.display = 'block'; // Only show to host
                 break;
 
             case 'PLAYER_JOINED':
@@ -85,15 +99,32 @@ export class MultiplayerManager {
                 break;
 
             case 'JOINED_LOBBY':
+                this.isHost = false; // Ensure non-host players know they're not host
                 document.getElementById('join-screen').style.display = 'none';
                 document.getElementById('lobby-screen').style.display = 'block';
                 document.getElementById('lobby-status').textContent = 'Waiting for host to start...';
+                document.getElementById('start-game-button').style.display = 'none'; // Hide for non-host
                 break;
 
             case 'GAME_STARTED':
                 this.isMultiplayerGame = true;
                 document.getElementById('lobby-screen').style.display = 'none';
-                document.getElementById('intro-screen').style.display = 'block';
+                // Skip intro screen in multiplayer
+                document.getElementById('gameCanvas').style.display = 'block';
+                document.getElementById('ui').style.display = 'block';
+                document.getElementById('weapons-ui').style.display = 'block';
+                document.getElementById('waveInfo').style.display = 'block';
+                
+                initializeGame(); // Use imported function directly
+                gameLoop(); // Use imported function directly
+                
+                // Set up state sync intervals
+                if (this.isHost) {
+                    // Host sends full game state every 50ms
+                    this.syncInterval = setInterval(() => {
+                        this.sendSyncedGameState();
+                    }, 50);
+                }
                 break;
 
             case 'GAME_STATE':
@@ -119,20 +150,22 @@ export class MultiplayerManager {
             case 'SYNC_GAME_STATE':
                 if (!this.isHost) {  // Only non-host players receive sync
                     this.syncedState = data.state;
-                    // Update game state with received data
-                    this.applyGameState(data.state);
+                    syncGameState(data.state); // Use imported function
                 }
                 break;
 
             case 'PLAYER_PAUSE':
-                if (data.playerId !== this.getPlayer()?.id) {
-                    if (data.isPaused) {
-                        window.pauseGame();
-                    } else {
-                        window.resumeGame();
-                    }
-                }
+                this.handlePauseState(data);
                 break;
+        }
+    }
+
+    handlePauseState(data) {
+        this.isPaused = data.isPaused;
+        if (data.isPaused) {
+            pauseGame(); // Use imported function
+        } else {
+            resumeGame(); // Use imported function
         }
     }
 
@@ -156,6 +189,10 @@ export class MultiplayerManager {
     }
 
     leaveLobby() {
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+            this.syncInterval = null;
+        }
         if (this.ws) {
             this.ws.close();
         }
@@ -170,13 +207,20 @@ export class MultiplayerManager {
 
     sendGameState(playerState) {
         if (this.isMultiplayerGame && this.ws && this.ws.readyState === WebSocket.OPEN) {
-            // Basic player state (position, etc)
+            // Get only projectiles owned by this player
+            const currentPlayerId = playerState.id;
+            const ownedProjectiles = projectiles.filter(p => p.playerId === currentPlayerId);
+
             this.ws.send(JSON.stringify({
                 type: 'GAME_STATE',
-                state: playerState
+                state: {
+                    ...playerState,
+                    projectiles: ownedProjectiles,
+                    id: currentPlayerId
+                }
             }));
 
-            // If host, also send full game state periodically
+            // If host, send full game state every frame
             if (this.isHost) {
                 this.sendSyncedGameState();
             }
@@ -189,21 +233,23 @@ export class MultiplayerManager {
         this.ws.send(JSON.stringify({
             type: 'SYNC_GAME_STATE',
             state: {
-                enemies: window.getEnemies(),
-                projectiles: window.getProjectiles(),
-                waveNumber: window.getWaveNumber(),
-                nextWaveTime: window.getNextWaveTime(),
-                gameTime: Date.now()
+                enemies: getEnemies(),
+                projectiles: getProjectiles(),
+                waveNumber: getWaveNumber(),
+                nextWaveTime: getNextWaveTime(),
+                gameTime: Date.now(),
+                isPaused: this.isPaused
             }
         }));
     }
 
     applyGameState(state) {
-        window.syncGameState(state);
+        syncGameState(state);
     }
 
     notifyPause(isPaused) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.isPaused = isPaused;
             this.ws.send(JSON.stringify({
                 type: 'PLAYER_PAUSE',
                 playerId: this.getPlayer()?.id,
@@ -213,8 +259,42 @@ export class MultiplayerManager {
     }
 
     updateOtherPlayerState(state) {
-        // Update the state of other players in the game
-        this.otherPlayers.set(state.id, state);
+        if (!state.id) return;
+
+        // Add projectiles to the main projectile array
+        if (state.projectiles) {
+            // Filter out old projectiles from this player
+            const currentPlayerId = state.id;
+            const existingProjectiles = projectiles.filter(p => p.playerId !== currentPlayerId);
+            
+            // Reset the array while keeping the reference
+            projectiles.length = 0;
+            projectiles.push(...existingProjectiles);
+            
+            // Add new projectiles from this player
+            state.projectiles.forEach(p => {
+                p.playerId = currentPlayerId;  // Ensure projectile ownership
+                p.fromPlayer = true;          // Mark as player projectile
+                projectiles.push(p);
+            });
+        }
+
+        // Update player state
+        this.otherPlayers.set(state.id, {
+            ...state,
+            lastUpdate: Date.now()
+        });
+
+        // Prune old player states
+        for (const [id, playerState] of this.otherPlayers) {
+            if (Date.now() - playerState.lastUpdate > 5000) {
+                // Remove all projectiles from disconnected player
+                const remainingProjectiles = projectiles.filter(p => p.playerId !== id);
+                projectiles.length = 0;
+                projectiles.push(...remainingProjectiles);
+                this.otherPlayers.delete(id);
+            }
+        }
     }
 
     getOtherPlayers() {
@@ -222,9 +302,52 @@ export class MultiplayerManager {
     }
 
     getPlayer() {
-        return window.getPlayer?.();
+        return getPlayer?.();
+    }
+
+    // Update to draw other players
+    drawOtherPlayers(ctx, camera) {
+        for (const [_, playerState] of this.otherPlayers) {
+            // Only draw if state is fresh (last 100ms)
+            if (Date.now() - playerState.lastUpdate > 100) continue;
+
+            // Draw other player
+            ctx.fillStyle = "red"; // Different color for other players
+            ctx.beginPath();
+            ctx.arc(
+                playerState.pos.x - camera.x, 
+                playerState.pos.y - camera.y, 
+                playerState.radius || 20, 
+                0, 
+                Math.PI * 2
+            );
+            ctx.fill();
+
+            // Draw name tag above player
+            ctx.fillStyle = "white";
+            ctx.font = "14px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(
+                "Player 2",
+                playerState.pos.x - camera.x,
+                playerState.pos.y - camera.y - 30
+            );
+
+            // Draw player's projectiles
+            if (playerState.projectiles) {
+                playerState.projectiles.forEach(proj => {
+                    ctx.fillStyle = proj.color || "white";
+                    ctx.beginPath();
+                    ctx.arc(
+                        proj.pos.x - camera.x,
+                        proj.pos.y - camera.y,
+                        proj.radius || 5,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                });
+            }
+        }
     }
 }
-
-// Export a singleton instance
-export const multiplayerManager = new MultiplayerManager();

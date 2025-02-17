@@ -32,6 +32,20 @@ export function showStatsMenu() {
     };
 }
 
+export function toggleStatsMenu() {
+    const menu = document.getElementById('stats-menu');
+    const isVisible = menu.style.display === 'block';
+    menu.style.display = isVisible ? 'none' : 'block';
+    
+    // Notify other players about pause state through multiplayer manager
+    if (window.multiplayerManager?.isMultiplayerGame) {
+        window.multiplayerManager.notifyPause(!isVisible);
+    } else {
+        // Handle single player pause
+        isVisible ? window.resumeGame() : window.pauseGame();
+    }
+}
+
 function updateStatDisplay(player) {
     UI_ELEMENTS.availablePoints.textContent = player.statPoints;
     UI_ELEMENTS.currentAttackSpeed.textContent = player.attackSpeed + 'ms';

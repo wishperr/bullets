@@ -1,4 +1,5 @@
-import { initializeGame, gameLoop } from './src/game.js';
+import { initializeGame, gameLoop, registerMultiplayerManager } from './src/game.js';
+import { MultiplayerManager } from './src/multiplayerManager.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const startButton = document.getElementById('start-button');
@@ -13,6 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
     ui.style.display = 'none';
     weaponsUi.style.display = 'none';
     waveInfo.style.display = 'none';
+
+    // Initialize multiplayer manager and register it with the game
+    const multiplayerManager = new MultiplayerManager();
+    window.multiplayerManager = multiplayerManager; // Keep for legacy compatibility
+    registerMultiplayerManager(multiplayerManager);
 
     startButton.addEventListener('click', () => {
         // Hide intro screen

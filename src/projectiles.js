@@ -27,22 +27,33 @@ export function shootProjectiles() {
     const closestEnemy = findClosestEnemy(player);
     if (!closestEnemy) return;
 
+    let newProjectiles = [];
     switch(player.weapon) {
         case "laser":
             shootLaser(player, closestEnemy, gameCamera);  // Use the stored camera reference
             break;
         case "rockets":
             const rocket = shootRocket(player, closestEnemy);
-            projectiles.push(rocket);
+            rocket.fromPlayer = true;  // Mark as player projectile
+            rocket.playerId = player.id;  // Add player ID to projectile
+            newProjectiles.push(rocket);
             break;
         case "chainLightning":
             shootChainLightning(player, closestEnemy);
             break;
         case "shotgun":
             const shotgunProjectiles = shootShotgun(player, closestEnemy);
-            projectiles.push(...shotgunProjectiles);
+            shotgunProjectiles.forEach(p => {
+                p.fromPlayer = true;  // Mark as player projectiles
+                p.playerId = player.id;  // Add player ID to each projectile
+            });
+            newProjectiles.push(...shotgunProjectiles);
             break;
         // Drone swarm doesn't need this as it handles its own shooting
+    }
+
+    if (newProjectiles.length > 0) {
+        projectiles.push(...newProjectiles);
     }
 }
 
@@ -60,6 +71,7 @@ export function updateProjectiles() {
 
         // Update drone projectile trails
         if (p.isDroneProjectile) {
+            p.trail = p.trail || [];
             p.trail.unshift({ x: p.pos.x, y: p.pos.y });
             if (p.trail.length > p.maxTrailLength) {
                 p.trail.pop();
@@ -106,6 +118,10 @@ export function drawProjectiles(ctx, camera) {
             p.pos.y >= camera.y - p.radius && 
             p.pos.y <= camera.y + camera.height + p.radius) {
             
+            // Set color based on player ownership
+            const currentPlayerId = getPlayer()?.id;
+            const isOwnProjectile = p.playerId === currentPlayerId;
+
             if (p.isRocket) {
                 // Draw rocket
                 ctx.translate(p.pos.x - camera.x, p.pos.y - camera.y);
@@ -209,8 +225,8 @@ export function drawProjectiles(ctx, camera) {
                 ctx.arc(p.pos.x - camera.x, p.pos.y - camera.y, p.radius, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                ctx.fillStyle = p.enemyShot ? "cyan" : "white";
-                ctx.shadowColor = p.enemyShot ? "cyan" : "red";
+                ctx.fillStyle = p.enemyShot ? "cyan" : (isOwnProjectile ? "white" : "yellow");
+                ctx.shadowColor = p.enemyShot ? "cyan" : (isOwnProjectile ? "red" : "orange");
                 ctx.shadowBlur = 10;
                 ctx.beginPath();
                 ctx.arc(p.pos.x - camera.x, p.pos.y - camera.y, p.radius, 0, Math.PI * 2);

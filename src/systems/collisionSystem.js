@@ -70,6 +70,11 @@ function handleEnemyProjectileCollision(projectile, player, projectileIndex) {
 }
 
 function handlePlayerProjectileCollision(projectile, projectileIndex) {
+    // Don't process collisions for other players' projectiles if we're not the host
+    if (!window.multiplayerManager?.isHost && projectile.playerId !== getPlayer()?.id) {
+        return;
+    }
+
     for (let j = enemies.length - 1; j >= 0; j--) {
         const enemy = enemies[j];
         const distance = getDistance(projectile.pos.x, projectile.pos.y, enemy.pos.x, enemy.pos.y);

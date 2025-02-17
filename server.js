@@ -21,9 +21,9 @@ app.get('/', (req, res) => {
 
 const lobbies = new Map(); // Store active lobbies
 
-// Generate a random lobby code
+// Generate a fixed lobby code for testing
 function generateLobbyCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+    return "123";
 }
 
 wss.on('connection', (ws) => {
@@ -106,6 +106,41 @@ wss.on('connection', (ws) => {
                             player.ws.send(JSON.stringify({
                                 type: 'GAME_STATE',
                                 state: data.state
+                            }));
+                        }
+                    });
+                }
+                break;
+
+            case 'SYNC_GAME_STATE':
+                const syncLobby = Array.from(lobbies.values())
+                    .find(l => l.players.some(p => p.ws === ws));
+                
+                if (syncLobby && syncLobby.host === ws) {
+                    // Only host can send sync state, broadcast to other players
+                    syncLobby.players.forEach(player => {
+                        if (player.ws !== ws) {
+                            player.ws.send(JSON.stringify({
+                                type: 'SYNC_GAME_STATE',
+                                state: data.state
+                            }));
+                        }
+                    });
+                }
+                break;
+
+            case 'PLAYER_PAUSE':
+                const pauseLobby = Array.from(lobbies.values())
+                    .find(l => l.players.some(p => p.ws === ws));
+                
+                if (pauseLobby) {
+                    // Broadcast pause state to all players
+                    pauseLobby.players.forEach(player => {
+                        if (player.ws !== ws) {
+                            player.ws.send(JSON.stringify({
+                                type: 'PLAYER_PAUSE',
+                                playerId: data.playerId,
+                                isPaused: data.isPaused
                             }));
                         }
                     });

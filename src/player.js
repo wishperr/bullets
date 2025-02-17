@@ -13,8 +13,12 @@ function generatePlayerId() {
 const keys = { w: false, a: false, s: false, d: false };
 
 export function initializePlayer() {
+    const existingPlayer = getPlayer();
+    // Don't reinitialize if we already have a player (for multiplayer)
+    if (existingPlayer) return;
+
     player = {
-        id: generatePlayerId(),  // Add unique ID for multiplayer
+        id: generatePlayerId(),  // Keep the unique ID
         pos: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
         speed: PLAYER.SPEED,
         radius: PLAYER.RADIUS,
@@ -29,6 +33,9 @@ export function initializePlayer() {
         invincible: false,
         statPoints: 0
     };
+
+    // Initialize weapon UI on player creation
+    updateWeaponUI();
 }
 
 export function getPlayer() {
