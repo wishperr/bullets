@@ -5,9 +5,16 @@ import { enemies } from '../../enemies.js';
 
 export let laserBeams = [];
 
-function findClosestTargets(player, count, excludeTargets = new Set()) {
+function isEnemyInView(enemy, camera) {
+    return enemy.pos.x >= camera.x && 
+           enemy.pos.x <= camera.x + camera.width &&
+           enemy.pos.y >= camera.y && 
+           enemy.pos.y <= camera.y + camera.height;
+}
+
+function findClosestTargets(player, count, camera, excludeTargets = new Set()) {
     return enemies
-        .filter(enemy => !excludeTargets.has(enemy))
+        .filter(enemy => !excludeTargets.has(enemy) && isEnemyInView(enemy, camera))
         .map(enemy => ({
             enemy,
             distance: getDistance(player.pos.x, player.pos.y, enemy.pos.x, enemy.pos.y)
@@ -17,13 +24,13 @@ function findClosestTargets(player, count, excludeTargets = new Set()) {
         .map(item => item.enemy);
 }
 
-export function shootLaser(player, target) {
+export function shootLaser(player, target, camera) {  // Add camera parameter
     const numLasers = 1 + player.additionalProjectiles;
     const laserDamage = Math.max(0.5, player.projectileStrength * PROJECTILE.LASER_DAMAGE_MULTIPLIER);
     
     // Get all targets for the multiple lasers
     const targetedEnemies = new Set();
-    const targets = findClosestTargets(player, numLasers);
+    const targets = findClosestTargets(player, numLasers, camera);  // Pass camera
     
     targets.forEach(target => {
         const angle = Math.atan2(target.pos.y - player.pos.y, target.pos.x - player.pos.x);

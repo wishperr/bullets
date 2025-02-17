@@ -1,6 +1,6 @@
 import { initializePlayer, getPlayer, handlePlayerMovement } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
-import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
+import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles, setCamera } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI, showBossMessage } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
 import { updatePowerups, drawPowerups } from './powerups.js';
@@ -84,6 +84,7 @@ export function initializeGame() {
     initializePlayer();
     spawnWaveEnemies(1); // Pass wave number 1 explicitly
     startWave();
+    setCamera(camera);  // Add this line to set the camera reference
     updateProjectileInterval();
 }
 
