@@ -7,7 +7,31 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="intro-screen">
+    <div id="menu-screen">
+        <h1>Bullet Survivors</h1>
+        <div class="menu-buttons">
+            <button id="singleplayer-button">Singleplayer</button>
+            <button id="create-lobby-button">Create Multiplayer Lobby</button>
+            <button id="join-lobby-button">Join Multiplayer Lobby</button>
+        </div>
+    </div>
+
+    <div id="lobby-screen" style="display: none;">
+        <h2>Multiplayer Lobby</h2>
+        <div id="lobby-code-display"></div>
+        <div id="lobby-status">Waiting for players...</div>
+        <button id="start-game-button" style="display: none;">Start Game</button>
+        <button id="leave-lobby-button">Leave Lobby</button>
+    </div>
+
+    <div id="join-screen" style="display: none;">
+        <h2>Join Lobby</h2>
+        <input type="text" id="lobby-code-input" placeholder="Enter Lobby Code">
+        <button id="join-game-button">Join Game</button>
+        <button id="back-to-menu-button">Back to Menu</button>
+    </div>
+
+    <div id="intro-screen" style="display: none;">
         <h1>Bullet Survivors</h1>
         <div class="controls">
             <h2>Controls</h2>

@@ -4,12 +4,17 @@ import { showStatsMenu } from './statsMenu.js';
 
 const weapons = ["shotgun", "laser", "rockets", "chainLightning", "droneSwarm"];
 let currentWeaponIndex = 0;
-
 let player;
+
+function generatePlayerId() {
+    return Math.random().toString(36).substring(2, 15);
+}
+
 const keys = { w: false, a: false, s: false, d: false };
 
 export function initializePlayer() {
     player = {
+        id: generatePlayerId(),  // Add unique ID for multiplayer
         pos: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
         speed: PLAYER.SPEED,
         radius: PLAYER.RADIUS,

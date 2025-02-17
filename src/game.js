@@ -1,6 +1,6 @@
 import { initializePlayer, getPlayer, handlePlayerMovement } from './player.js';
 import { spawnEnemy, updateEnemies, enemies } from './enemies.js';
-import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles, setCamera } from './projectiles.js';
+import { updateProjectiles, shootProjectiles, projectiles, drawProjectiles } from './projectiles.js';
 import { updateUI, showGameOver, updateWaveUI, showBossMessage } from './ui.js';
 import { GAME_WIDTH, GAME_HEIGHT, CAMERA, WAVE, WAVE_SPAWN_RATE, ENEMY_TYPES } from './constants.js';
 import { updatePowerups, drawPowerups } from './powerups.js';
@@ -11,7 +11,6 @@ import { UI_ELEMENTS } from './uiConstants.js';
 import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common/enemyUtils.js';
 import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
 import { spawnWaveEnemies } from './systems/waveSystem.js';
-import { updateDroneSwarm, drawDroneSwarm } from './weapons/systems/droneSwarmSystem.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -84,7 +83,6 @@ export function initializeGame() {
     initializePlayer();
     spawnWaveEnemies(1); // Pass wave number 1 explicitly
     startWave();
-    setCamera(camera);  // Add this line to set the camera reference
     updateProjectileInterval();
 }
 
@@ -103,7 +101,6 @@ export function gameLoop() {
     updateProjectiles();
     updateEnemies();
     updateParticles();
-    updateDroneSwarm();  // Add drone swarm update
     updateCamera();
     updatePowerups();
 
@@ -194,7 +191,6 @@ function draw() {
     
     drawProjectiles(ctx, camera);
     drawParticles(ctx, camera);
-    drawDroneSwarm(ctx, camera);  // Add drone swarm drawing
 
     enemies.forEach(e => {
         if (e.type === "arsenal_boss") {

@@ -264,3 +264,102 @@ canvas {
 #close-stats:hover {
     color: #ff5252;
 }
+
+/* Multiplayer Menu Styles */
+#menu-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 2rem;
+    border-radius: 10px;
+    z-index: 1000;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.menu-buttons button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    background: #4a4a4a;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.menu-buttons button:hover {
+    background: #666666;
+}
+
+#lobby-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 2rem;
+    border-radius: 10px;
+    z-index: 1000;
+}
+
+#lobby-code-display {
+    font-size: 2rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+#lobby-status {
+    margin: 1rem 0;
+    color: #88ff88;
+}
+
+#join-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 2rem;
+    border-radius: 10px;
+    z-index: 1000;
+}
+
+#lobby-code-input {
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    margin: 1rem 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    color: white;
+    text-transform: uppercase;
+}
+
+#start-game-button, #join-game-button, #leave-lobby-button, #back-to-menu-button {
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    font-size: 1rem;
+    background: #4a4a4a;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#start-game-button:hover, #join-game-button:hover, #leave-lobby-button:hover, #back-to-menu-button:hover {
+    background: #666666;
+}

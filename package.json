@@ -1,0 +1,15 @@
+{
+  "name": "bullet-survivors",
+  "version": "1.0.0",
+  "description": "A multiplayer bullet hell game",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "path": "^0.12.7",
+    "ws": "^8.18.0"
+  }
+}
