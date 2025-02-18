@@ -312,7 +312,7 @@ export function drawArsenalBoss(ctx, boss, camera) {
             const startY = boss.pos.y + Math.sin(segment.angle) * (SHIELD_CONFIG.RADIUS - 20);
             const endX = boss.pos.x + Math.cos(segment.angle) * SHIELD_CONFIG.RADIUS;
             const endY = boss.pos.y + Math.sin(segment.angle) * SHIELD_CONFIG.RADIUS;
-
+            
             ctx.strokeStyle = segment.independent ? "#ffaa00" : "#00ffff";
             ctx.lineWidth = 8;
             ctx.globalAlpha = 0.6;
@@ -323,39 +323,4 @@ export function drawArsenalBoss(ctx, boss, camera) {
             ctx.globalAlpha = 1;
         }
     });
-
-    // Add health bar and percentage
-    const healthBarWidth = 200;
-    const healthBarHeight = 10;
-    const healthPercentage = boss.health / ENEMY_TYPES.ARSENAL_BOSS.HEALTH;
-    
-    // Health bar background
-    ctx.fillStyle = "black";
-    ctx.fillRect(
-        boss.pos.x - camera.x - healthBarWidth/2,
-        boss.pos.y - camera.y - boss.radius - 20,
-        healthBarWidth,
-        healthBarHeight
-    );
-    
-    // Health bar fill with color based on health
-    ctx.fillStyle = healthPercentage > 0.5 ? "green" : 
-                   healthPercentage > 0.25 ? "yellow" : "red";
-    ctx.fillRect(
-        boss.pos.x - camera.x - healthBarWidth/2,
-        boss.pos.y - camera.y - boss.radius - 20,
-        healthBarWidth * healthPercentage,
-        healthBarHeight
-    );
-
-    // Health percentage text
-    ctx.fillStyle = "white";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(
-        Math.round(healthPercentage * 100) + "%",
-        boss.pos.x - camera.x,
-        boss.pos.y - camera.y
-    );
 }

@@ -196,10 +196,16 @@ function draw() {
     
     drawProjectiles(ctx, camera);
     drawParticles(ctx, camera);
-    drawDroneSwarm(ctx, camera);  // Add drone swarm drawing
+    drawDroneSwarm(ctx, camera);
+
+    // Update boss health bar visibility
+    let bossPresent = false;
+    let currentBoss = null;
 
     enemies.forEach(e => {
         if (e.type === "arsenal_boss") {
+            bossPresent = true;
+            currentBoss = e;
             drawArsenalBoss(ctx, e, camera);
         } else if (e.type === "arsenal_turret") {
             // Draw turret
@@ -250,7 +256,6 @@ function draw() {
             ctx.closePath();
             ctx.fill();
 
-            // Add glowing outline based on rage state
             if (e.rageStage > 0) {
                 ctx.strokeStyle = e.rageStage === 3 ? '#ff0000' : 
                                 e.rageStage === 2 ? '#ff8800' : '#ffff00';
@@ -266,46 +271,14 @@ function draw() {
                 e.type === "tank" ? "yellow" : 
                 e.type === "shooter" ? "pink" : "green";
 
+            if (e.type === "boss") {
+                bossPresent = true;
+                currentBoss = e;
+            }
+
             ctx.beginPath();
             ctx.arc(e.pos.x - camera.x, e.pos.y - camera.y, e.radius, 0, Math.PI * 2);
             ctx.fill();
-        }
-
-        // Add boss health bar and percentage
-        if (e.type === "boss") {
-            const healthBarWidth = 200;
-            const healthBarHeight = 10;
-            const healthPercentage = e.health / ENEMY_TYPES.BOSS.HEALTH;
-            
-            // Health bar background
-            ctx.fillStyle = "black";
-            ctx.fillRect(
-                e.pos.x - camera.x - healthBarWidth/2,
-                e.pos.y - camera.y - e.radius - 20,
-                healthBarWidth,
-                healthBarHeight
-            );
-            
-            // Health bar fill
-            ctx.fillStyle = healthPercentage > 0.5 ? "green" : 
-                          healthPercentage > 0.25 ? "yellow" : "red";
-            ctx.fillRect(
-                e.pos.x - camera.x - healthBarWidth/2,
-                e.pos.y - camera.y - e.radius - 20,
-                healthBarWidth * healthPercentage,
-                healthBarHeight
-            );
-
-            // Add health percentage text
-            ctx.fillStyle = "white";
-            ctx.font = "16px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(
-                Math.round(healthPercentage * 100) + "%",
-                e.pos.x - camera.x,
-                e.pos.y - camera.y
-            );
         }
 
         if (e.shield > 0) {
@@ -316,6 +289,23 @@ function draw() {
             ctx.stroke();
         }
     });
+
+    // Update boss health bar UI
+    if (bossPresent && currentBoss) {
+        const maxHealth = currentBoss.type === "arsenal_boss" ? 
+            ENEMY_TYPES.ARSENAL_BOSS.HEALTH : 
+            ENEMY_TYPES.BOSS.HEALTH;
+        
+        const healthPercentage = (currentBoss.health / maxHealth) * 100;
+        
+        UI_ELEMENTS.bossHealthBar.style.display = "block";
+        UI_ELEMENTS.bossName.textContent = currentBoss.type === "arsenal_boss" ? 
+            "Arsenal Boss" : "Boss";
+        UI_ELEMENTS.healthBar.style.width = `${healthPercentage}%`;
+        UI_ELEMENTS.healthPercentage.textContent = `${Math.round(healthPercentage)}%`;
+    } else {
+        UI_ELEMENTS.bossHealthBar.style.display = "none";
+    }
 
     drawPowerups(ctx, camera);
 }
