@@ -19,5 +19,11 @@ export const UI_ELEMENTS = {
     currentProjectiles: document.getElementById("current-projectiles"),
     currentMoveSpeed: document.getElementById("current-move-speed"),
     closeStats: document.getElementById("close-stats"),
-    statButtons: document.querySelectorAll(".stat-button")
+    statButtons: document.querySelectorAll(".stat-button"),
+    
+    // Boss health bar elements
+    bossHealthBar: document.getElementById("bossHealthBar"),
+    bossName: document.querySelector(".boss-name"),
+    healthBar: document.querySelector(".health-bar"),
+    healthPercentage: document.querySelector(".health-percentage")
 };
