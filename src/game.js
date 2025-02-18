@@ -12,6 +12,7 @@ import { handleEnemyDeath, resetKillCount, getKillCount } from './weapons/common
 import { initializeArsenalBoss, drawArsenalBoss } from './weapons/systems/arsenalSystem.js';
 import { spawnWaveEnemies } from './systems/waveSystem.js';
 import { updateDroneSwarm, drawDroneSwarm } from './weapons/systems/droneSwarmSystem.js';
+import { updateMinimap } from './systems/minimapSystem.js';
 
 // Game canvas setup
 const canvas = document.getElementById("gameCanvas");
@@ -106,6 +107,7 @@ export function gameLoop() {
     updateDroneSwarm();  // Add drone swarm update
     updateCamera();
     updatePowerups();
+    updateMinimap(); // Add minimap update
 
     if (enemyInView()) {
         if (!projectileInterval) updateProjectileInterval();

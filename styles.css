@@ -15,6 +15,18 @@ canvas {
     background-color: black;
 }
 
+/* Minimap */
+#minimapCanvas {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid white;
+    border-radius: 5px;
+}
+
 /* UI Elements */
 #ui {
     position: absolute;
